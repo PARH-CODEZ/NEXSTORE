@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import FullScreenLoader from '../FullScreenLoader/FullScreenLoader';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -10,22 +10,31 @@ import {
     ShoppingCart,
     Globe,
     User,
-    ChevronDown 
+    ChevronDown
 } from 'lucide-react';
 import AccountModal from '../AccountModal/AccountModal';
 import Link from 'next/link';
 
-const Navbar = () => {
+const Navbar = ({ notFixed = false }) => {
 
-
+    const pathname = usePathname()
     const [loading, setLoading] = useState(true)
     const [addresses, setAddresses] = useState([]);
     const [defaultCity, setDefaultCity] = useState('');
     const [defaultPostalCode, setDefaultPostalCode] = useState('');
 
-    const user = ""
+    const user = useSelector((state) => state.user.user);
 
-
+ useEffect(() => {
+  if (pathname === '/') {
+    setSearchTerm('');
+  } else if (pathname.startsWith('/category/')) {
+    const slug = pathname.split('/category/')[1];  
+    const decoded = decodeURIComponent(slug);     
+    const formatted = decoded.replace(/[-_]/g, ' ').toUpperCase();
+    setSearchTerm(formatted);
+  }
+}, [pathname]);
     useEffect(() => {
         const fetchAddresses = async () => {
             try {
@@ -125,6 +134,25 @@ const Navbar = () => {
     const resultsRef = useRef(null);
 
 
+
+    useEffect(() => {
+    function handleClickOutside(event) {
+      if (resultsRef.current && !resultsRef.current.contains(event.target)) {
+        setShowResults(false);
+      }
+    }
+
+    if (showResults) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showResults]);
+
     const fetchResults = async () => {
         if (!searchTerm.trim()) return setSearchResults({ categories: [], products: [] });
 
@@ -143,7 +171,11 @@ const Navbar = () => {
         setShowResults(false);
         router.push(`/category/${product.categorySlug}?product=${product.id}`);
     };
-
+  
+    const fetchUserQuery = () => {
+        setShowResults(false)
+        router.push(`/category/${searchTerm}`)
+    }
 
 
 
@@ -172,14 +204,21 @@ const Navbar = () => {
 
     /* ── render ─────────────────────────────────── */
     return (
-        <div className="bg-[#0D0D0D] text-white sticky top-0 z-50 w-full p-[10] pt-[25] md:p-[2]">
+      <div
+      className={
+        `bg-[#0D0D0D] text-white z-50 w-full p-[10px] pt-[25px] md:p-2 ` +
+        (notFixed ? '' : 'sticky top-0')
+      }
+    >
+
             <div className="mx-auto px-4">
                 <div className=" items-center h-[140px] md:flex md:h-[50px]">
                     {/* Logo */}
-                    <Link href="/">
-                        <div className="font-bold text-3xl md:text-2xl cursor-pointer select-none">
-                            NEXSTORE
-                        </div>
+                    <Link
+                        href="/"
+                        className="font-bold text-3xl md:text-2xl cursor-pointer select-none relative z-50"
+                    >
+                        NEXSTORE
                     </Link>
                     <div className='flex flex-col-reverse md:flex-none md:flex-row md:flex-grow md:items-center'>
 
@@ -187,8 +226,8 @@ const Navbar = () => {
                             <div className="flex md:hidden items-center px-1 py-2 gap-2 text-md border-t border-gray-700">
                                 <MapPin size={20} />
                                 <div>
-                                    <span className="text-gray-300 uppercase">Delivering to Mumbai 400001</span> •{' '}
-                                    <span className="font-semibold underline uppercase">Update location</span>
+                                    <span className="text-gray-300 uppercase">Delivering to {defaultPostalCode || '400001'}</span> •{' '}
+                                    <span className="font-semibold underline uppercase"> {defaultCity || 'Update Location'}</span>
                                 </div>
                             </div>
                         </Link>
@@ -259,7 +298,7 @@ const Navbar = () => {
 
                                 <button
                                     className="bg-[#FF9900] hover:bg-[#FF9800] px-3 py-2 transition-colors"
-                                    onClick={fetchResults}
+                                    onClick={fetchUserQuery}
                                 >
                                     <Search size={20} className="text-gray-900" />
                                 </button>
@@ -345,7 +384,7 @@ const Navbar = () => {
 
 
                         {/* Right‑hand actions */}
-                        <div className="flex justify-end space-x-3 md: space-x-6 items-center select-none mt-[-30px] md:mt-0">
+                        <div className="flex justify-end space-x-3 md: space-x items-center select-none mt-[-30px] md:mt-0">
                             {/* Language */}
                             <div className=" hidden md:flex flex flex-row items-center px-2 py-1 hover:bg-gray-800 rounded cursor-pointer">
                                 <Globe size={20} className="mr-1" />
@@ -366,13 +405,14 @@ const Navbar = () => {
 
                                 {/* Desktop: ACCOUNT */}
                                 <span className="font-semibold hidden md:flex truncate">ACCOUNT & LISTS ▼</span>
-                                
-                            </div>
 
-                            <Link href={'/login'}>
+                            </div>
+                            <Link href={user ? '/account' : '/login'}>
                                 <div className="flex items-center text-gray-300 md:hidden space-x-1">
-                                    <User size={25} className='font-bold' />
-                                    <span className='text-xl font-semibold'>SIGN IN</span>
+                                    <User size={25} className="font-bold" />
+                                    <span className="text-xl font-semibold">
+                                        {user ? user.name.trim().split(' ')[0] : 'SIGN IN'}
+                                    </span>
                                 </div>
                             </Link>
 
@@ -381,7 +421,7 @@ const Navbar = () => {
                             <div onClick={handleClick} className="hidden md:flex flex-col px-2 py-1 hover:bg-gray-800 rounded cursor-pointer text-sm leading-tight">
                                 {user?.role === 'seller' ? (
                                     <>
-                                        <span className="text-gray-300">LIST YOUR</span>
+                                        <span className="text-gray-300">LIST NEW </span>
                                         <span className="font-semibold uppercase">PRODUCT </span>
                                     </>
                                 ) : (
@@ -411,13 +451,13 @@ const Navbar = () => {
             </div>
 
             {/* Account dropdown */}
-             <AccountModal
-        isOpen={isAccountModalOpen}
-        onClose={forceClose}
-        onSignIn={handleSignIn}
-        onMouseEnter={holdModalOpen}
-        onMouseLeave={scheduleClose}
-      />
+            <AccountModal
+                isOpen={isAccountModalOpen}
+                onClose={forceClose}
+                onSignIn={handleSignIn}
+                onMouseEnter={holdModalOpen}
+                onMouseLeave={scheduleClose}
+            />
 
         </div>
     );

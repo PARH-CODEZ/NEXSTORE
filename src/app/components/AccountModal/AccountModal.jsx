@@ -1,8 +1,8 @@
 'use client';
 import React from 'react';
 import SignInButton from '../Buttons/SignInButton';
-// import { useSelector, useDispatch } from 'react-redux';
-// import { clearUser } from '@/store/userSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { clearUser } from '@/store/userSlice';
 import { useRouter } from 'next/navigation';
 
 const AccountModal = ({
@@ -12,9 +12,9 @@ const AccountModal = ({
   onMouseEnter,
   onMouseLeave,
 }) => {
-//   const user = useSelector((state) => state.user.user);
-const user=''
-//   const dispatch = useDispatch();
+  const user = useSelector((state) => state.user.user);
+
+  const dispatch = useDispatch();
   const router = useRouter();
 
   const onSignOut = async () => {
