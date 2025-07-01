@@ -54,7 +54,7 @@ const ProductListingForm = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [showCategoryModal, setShowCategoryModal] = useState(false)
-    
+
     const [formData, setFormData] = useState({
         name: '',
         categoryId: '',
@@ -226,21 +226,20 @@ const ProductListingForm = () => {
         }));
     };
 
-    const addSpecification = () => {
-        if (!currentSpecification.label || !currentSpecification.value) {
-            setErrors({ specification: 'Both label and value are required' });
-            return;
-        }
+   const addSpecification = () => {
+  if (!currentSpecification.label || !currentSpecification.value) {
+    setErrors({ specification: 'Both label and value are required' });
+    return;
+  }
 
-        setFormData(prev => ({
-            ...prev,
-            specifications: [...prev.specifications, { ...currentSpecification, id: Date.now() }]
-        }));
+  setFormData(prev => ({
+    ...prev,
+    specifications: [...(prev.specifications || []), { ...currentSpecification, id: Date.now() }]
+  }));
 
-        setCurrentSpecification({ label: '', value: '' });
-        setErrors({});
-    };
-
+  setCurrentSpecification({ label: '', value: '' });
+  setErrors({});
+};
     const removeSpecification = (index) => {
         setFormData(prev => ({
             ...prev,
