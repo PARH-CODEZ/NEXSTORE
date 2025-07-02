@@ -23,55 +23,53 @@ const ImageScroller = () => {
   }, []);
 
   return (
-    <div className="w-screen relative p-2 md:p-0">
-      <div className="relative w-full overflow-hidden">
-        {/* Slide Container */}
-        <div className="relative aspect-[16/7] w-full rounded-xl md:rounded-none">
-          {slides.map((slide, index) => (
-            <img
-              key={slide.id}
-              src={slide.url}
-              alt={`Slide ${index + 1}`}
-              className=" absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out scale-180 translate-y-[75px] md:scale-100 md:translate-y-[0px]"
-              style={{
-                opacity: index === currentSlide ? 1 : 0,
-                zIndex: index === currentSlide ? 10 : 0,
-              }}
-              draggable={false}
+    <div className="w-full max-w-full p-2 md:p-0">
+      {/* Container with fixed aspect ratio */}
+      <div className="relative w-full aspect-[16/7] rounded-xl overflow-hidden">
+        {slides.map((slide, index) => (
+          <img
+            key={slide.id}
+            src={slide.url}
+            alt={`Slide ${index + 1}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+            draggable={false}
+          />
+        ))}
+
+        {/* Bottom Fade Overlay */}
+<div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
+
+
+        {/* Arrows */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition duration-200 z-10 hover:scale-110"
+          aria-label="Previous Slide"
+        >
+          <ChevronLeft className="w-5 h-5 text-gray-700" />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition duration-200 z-10 hover:scale-110"
+          aria-label="Next Slide"
+        >
+          <ChevronRight className="w-5 h-5 text-gray-700" />
+        </button>
+
+        {/* Dots */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                index === currentSlide ? 'bg-white shadow-md' : 'bg-white/50 hover:bg-white/80'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
             />
           ))}
-
-          {/* Bottom Fade Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30 pointer-events-none z-10" />
-
-          {/* Arrows */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-6 top-[40%] -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition duration-200 z-20 hover:scale-110"
-          >
-            <ChevronLeft className="w-6 h-6 text-gray-700" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-6 top-[40%] -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition duration-200 z-20 hover:scale-110"
-          >
-            <ChevronRight className="w-6 h-6 text-gray-700" />
-          </button>
-
-          {/* Dots */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentSlide
-                    ? 'bg-white shadow-md'
-                    : 'bg-white/50 hover:bg-white/80'
-                }`}
-              />
-            ))}
-          </div>
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@ import React from 'react';
 
 const Footer = () => {
   return (
-    <footer className="bg-[#131A22] text-white py-10 px-6">
+    <footer className="bg-[#131A22] text-white py-10 px-6 abolute bottom-0">
       <div className="max-w-7xl mx-auto uppercase">
         <a href="#" className="block text-center text-sm mb-8 hover:underline text-gray-400">
           Back To Top

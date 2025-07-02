@@ -53,14 +53,14 @@ const CategoryNav = () => {
         }
       `}</style>
 
-      <div className="flex flex-row items-center justify-start space-x-8 px-6 h-full min-w-max">
+      <div className="flex flex-row items-center justify-start space-x-4 px-6 h-full min-w-max">
         {categories.map((category) => (
           <div
             key={category.CategoryID}
             onClick={() => handleClick(category.Slug)}
             className="flex items-center px-5 py-2 hover:bg-gray-700 cursor-pointer whitespace-nowrap h-full rounded-md transition-colors"
           >
-            <span className="text-base font-semibold uppercase tracking-wide">
+            <span className="text-sm font-semibold uppercase tracking-wide">
               {category.CategoryName}
             </span>
           </div>
