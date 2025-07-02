@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { generateSlug } from '@/lib/middleware/slugify';
+import { verifyAuth } from '@/lib/middleware/verifyAuth';
 
 // CREATE category
 export async function POST(req) {
   try {
+
+    // const user = verifyAuth(req);
+    // if (!user) {
+    //   return res.status(401).json({ error: 'Unauthorized' });
+    // }
+
+
     const { CategoryName, Description, DisplayImageURL } = await req.json();
 
     if (!CategoryName) {

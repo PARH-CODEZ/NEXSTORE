@@ -9,16 +9,25 @@ export async function GET(req) {
     return NextResponse.json({ categories: [], products: [] });
   }
 
-  // Check if "washing machine" is anywhere in the term
   const keywordToSearch = rawTerm.includes('washing machine') ? 'washing machine' : rawTerm;
 
   try {
     const categories = await prisma.Categories.findMany({
       where: {
-        CategoryName: {
-          contains: keywordToSearch,
-          mode: 'insensitive',
-        },
+        OR: [
+          {
+            CategoryName: {
+              contains: keywordToSearch,
+              mode: 'insensitive',
+            },
+          },
+          {
+            Description: {
+              contains: keywordToSearch,
+              mode: 'insensitive',
+            },
+          },
+        ],
       },
       select: {
         CategoryID: true,
@@ -28,16 +37,34 @@ export async function GET(req) {
       },
     });
 
-    // Similarly for products if needed
-    // const products = await prisma.Product.findMany({
-    //   where: {
-    //     ProductName: {
-    //       contains: keywordToSearch,
-    //       mode: 'insensitive',
-    //     },
-    //   },
-    //   select: { ... }
-    // });
+    const categoryIds = categories.map(cat => cat.CategoryID);
+
+    const products = await prisma.product.findMany({
+      where: {
+        OR: [
+          {
+            name: {
+              contains: keywordToSearch,
+              mode: 'insensitive',
+            },
+          },
+          {
+            categoryId: {
+              in: categoryIds,
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        category: {
+          select: {
+            CategoryName: true,
+          },
+        },
+      },
+    });
 
     return NextResponse.json({
       categories: categories.map(cat => ({
@@ -46,11 +73,14 @@ export async function GET(req) {
         description: cat.Description,
         slug: cat.Slug,
       })),
-      products: [], // add products similarly if you want
+      products: products.map(p => ({
+        id: p.id,
+        name: p.name,
+        categoryName: p.category?.CategoryName || 'Unknown',
+      })),
     });
   } catch (error) {
     console.error('Search API error:', error);
     return NextResponse.json({ categories: [], products: [] }, { status: 500 });
   }
 }
-

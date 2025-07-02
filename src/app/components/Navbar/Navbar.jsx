@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import FullScreenLoader from '../FullScreenLoader/FullScreenLoader';
+import MobileSidebar from '../MobileSidebar/MobileSidebar';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import {
@@ -22,19 +23,19 @@ const Navbar = ({ notFixed = false }) => {
     const [addresses, setAddresses] = useState([]);
     const [defaultCity, setDefaultCity] = useState('');
     const [defaultPostalCode, setDefaultPostalCode] = useState('');
-
+    const [isSidebarOpen, setSidebarOpen] = useState(false);
     const user = useSelector((state) => state.user.user);
 
- useEffect(() => {
-  if (pathname === '/') {
-    setSearchTerm('');
-  } else if (pathname.startsWith('/category/')) {
-    const slug = pathname.split('/category/')[1];  
-    const decoded = decodeURIComponent(slug);     
-    const formatted = decoded.replace(/[-_]/g, ' ').toUpperCase();
-    setSearchTerm(formatted);
-  }
-}, [pathname]);
+    useEffect(() => {
+        if (pathname === '/') {
+            setSearchTerm('');
+        } else if (pathname.startsWith('/category/')) {
+            const slug = pathname.split('/category/')[1];
+            const decoded = decodeURIComponent(slug);
+            const formatted = decoded.replace(/[-_]/g, ' ').toUpperCase();
+            setSearchTerm(formatted);
+        }
+    }, [pathname]);
     useEffect(() => {
         const fetchAddresses = async () => {
             try {
@@ -103,55 +104,29 @@ const Navbar = ({ notFixed = false }) => {
     };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState({ categories: [], products: [] })
     const [showResults, setShowResults] = useState(false);
     const resultsRef = useRef(null);
 
 
-
     useEffect(() => {
-    function handleClickOutside(event) {
-      if (resultsRef.current && !resultsRef.current.contains(event.target)) {
-        setShowResults(false);
-      }
-    }
+        function handleClickOutside(event) {
+            if (resultsRef.current && !resultsRef.current.contains(event.target)) {
+                setShowResults(false);
+            }
+        }
 
-    if (showResults) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
+        if (showResults) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showResults]);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showResults]);
 
     const fetchResults = async () => {
         if (!searchTerm.trim()) return setSearchResults({ categories: [], products: [] });
@@ -171,7 +146,7 @@ const Navbar = ({ notFixed = false }) => {
         setShowResults(false);
         router.push(`/category/${product.categorySlug}?product=${product.id}`);
     };
-  
+
     const fetchUserQuery = () => {
         setShowResults(false)
         router.push(`/category/${searchTerm}`)
@@ -204,12 +179,12 @@ const Navbar = ({ notFixed = false }) => {
 
     /* ── render ─────────────────────────────────── */
     return (
-      <div
-      className={
-        `bg-[#0D0D0D] text-white z-50 w-full p-[10px] pt-[25px] md:p-2 ` +
-        (notFixed ? '' : 'sticky top-0')
-      }
-    >
+        <div
+            className={
+                `bg-[#0D0D0D] text-white z-50 w-full p-[10px] pt-[25px] md:p-2 ` +
+                (notFixed ? '' : 'sticky top-0')
+            }
+        >
 
             <div className="mx-auto px-4">
                 <div className=" items-center h-[140px] md:flex md:h-[50px]">
@@ -346,11 +321,11 @@ const Navbar = ({ notFixed = false }) => {
                                                     className="px-3 py-3 hover:bg-gray-100 cursor-pointer rounded"
                                                     onClick={() => handleSelectProduct(prod)}
                                                 >
-                                                    <div className="text-lg font-semibold text-gray-900 uppercase">
+                                                    <div className="text-lg font-semibold text-purple-500 uppercase">
                                                         {prod.name}
                                                     </div>
                                                     <div className="text-gray-600 text-sm uppercase">
-                                                        In {prod.categorySlug}
+                                                        IN {prod.categoryName}
                                                     </div>
                                                 </div>
                                             ))}
@@ -407,14 +382,15 @@ const Navbar = ({ notFixed = false }) => {
                                 <span className="font-semibold hidden md:flex truncate">ACCOUNT & LISTS ▼</span>
 
                             </div>
-                            <Link href={user ? '/account' : '/login'}>
-                                <div className="flex items-center text-gray-300 md:hidden space-x-1">
-                                    <User size={25} className="font-bold" />
-                                    <span className="text-xl font-semibold">
-                                        {user ? user.name.trim().split(' ')[0] : 'SIGN IN'}
-                                    </span>
-                                </div>
-                            </Link>
+
+                            <div className="flex items-center text-gray-300 md:hidden space-x-1 "
+                                onClick={() => setSidebarOpen(true)}>
+                                <User size={25} className="font-bold" />
+                                <span className="text-xl font-semibold">
+                                    {user ? user.name.trim().split(' ')[0] : 'SIGN IN'}
+                                </span>
+                            </div>
+
 
 
                             {/* Returns & Orders */}
@@ -458,6 +434,10 @@ const Navbar = ({ notFixed = false }) => {
                 onMouseEnter={holdModalOpen}
                 onMouseLeave={scheduleClose}
             />
+            <div className='md:hidden'>
+                <MobileSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+            </div>
+
 
         </div>
     );

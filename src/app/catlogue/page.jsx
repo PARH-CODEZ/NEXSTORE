@@ -4,19 +4,11 @@ import { Plus, X, Upload, AlertCircle, Package, Tag, ImageIcon, Settings } from 
 import BrandModal from '../components/BrandModal/BrandModal';
 import CategoryModal from '../components/CategoryModal/CategoryModal';
 import FullScreenLoader from '../components/FullScreenLoader/FullScreenLoader';
+import { toast } from 'react-toastify';
 const ProductListingForm = () => {
-
     const [loading, setLoading] = useState(false)
-   
-    const [categories, setCategories] = useState([
-
-    ]);
-
-    const [brands, setBrands] = useState([
-
-    ]);
-
-
+    const [categories, setCategories] = useState([]);
+    const [brands, setBrands] = useState([]);
 
     async function fetchCategories() {
         try {
@@ -51,9 +43,11 @@ const ProductListingForm = () => {
         fetchCategories();
     }, []);
 
-
     const [showModal, setShowModal] = useState(false);
     const [showCategoryModal, setShowCategoryModal] = useState(false)
+
+
+
 
     const [formData, setFormData] = useState({
         name: '',
@@ -79,7 +73,6 @@ const ProductListingForm = () => {
     });
 
 
-
     const [availableAttributes, setAvailableAttributes] = useState([
 
     ]);
@@ -88,6 +81,8 @@ const ProductListingForm = () => {
         label: '',
         value: ''
     });
+
+    const [newAttributeName, setNewAttributeName] = useState('');
 
     const [uploadingImages, setUploadingImages] = useState(false);
     const [errors, setErrors] = useState({});
@@ -112,77 +107,91 @@ const ProductListingForm = () => {
         }
     };
 
-    const handleImageUpload = async (files, isVariant = false, variantIndex = null) => {
-        setUploadingImages(true);
-        const uploadedImages = [];
+const handleImageUpload = async (files, isVariant = false, variantIndex = null) => {
+  setUploadingImages(true);
+  const uploadedImages = [];
 
-        for (let file of files) {
-            // Simulate Cloudinary upload
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', 'your_upload_preset');
+  for (let file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'my_unsigned_preset');
+    formData.append('folder', 'products');
 
-            try {
-                // In real implementation, replace with actual Cloudinary API call
-                const mockUrl = URL.createObjectURL(file);
-                uploadedImages.push({
-                    imageUrl: mockUrl,
-                    isPrimary: uploadedImages.length === 0 && !isVariant
-                });
-            } catch (error) {
-                console.error('Upload failed:', error);
-            }
-        }
+    try {
+      const res = await fetch('https://api.cloudinary.com/v1_1/daw7edgbf/image/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-        if (isVariant && variantIndex !== null) {
-            setFormData(prev => ({
-                ...prev,
-                variants: prev.variants.map((variant, index) =>
-                    index === variantIndex
-                        ? { ...variant, images: [...variant.images, ...uploadedImages] }
-                        : variant
-                )
-            }));
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                images: [...prev.images, ...uploadedImages]
-            }));
-        }
+      if (!res.ok) throw new Error('Upload failed');
 
-        setUploadingImages(false);
-    };
+      const data = await res.json();
 
-    const handleVariantImageUpload = async (files) => {
-        setUploadingImages(true);
-        const uploadedImages = [];
+      uploadedImages.push({
+        imageUrl: data.secure_url,
+        isPrimary: uploadedImages.length === 0 && !isVariant,
+      });
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  }
 
-        for (let file of files) {
-            // Simulate Cloudinary upload for variant images
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', 'your_upload_preset');
+  if (isVariant && variantIndex !== null) {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((variant, index) =>
+        index === variantIndex
+          ? { ...variant, images: [...variant.images, ...uploadedImages] }
+          : variant
+      )
+    }));
+  } else {
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, ...uploadedImages]
+    }));
+  }
 
-            try {
-                // In real implementation, replace with actual Cloudinary API call
-                const mockUrl = URL.createObjectURL(file);
-                uploadedImages.push({
-                    imageUrl: mockUrl,
-                    isPrimary: false // Variant images are never primary
-                });
-            } catch (error) {
-                console.error('Variant image upload failed:', error);
-            }
-        }
+  setUploadingImages(false);
+};
 
-        // Add images to current variant
-        setCurrentVariant(prev => ({
-            ...prev,
-            images: [...(prev.images || []), ...uploadedImages]
-        }));
+const handleVariantImageUpload = async (files) => {
+  setUploadingImages(true);
+  const uploadedImages = [];
 
-        setUploadingImages(false);
-    };
+  for (let file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'my_unsigned_preset');
+    formData.append('folder', 'products');
+
+    try {
+      const res = await fetch('https://api.cloudinary.com/v1_1/daw7edgbf/image/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+
+      const data = await res.json();
+
+      uploadedImages.push({
+        imageUrl: data.secure_url,
+        isPrimary: false,
+      });
+    } catch (error) {
+      console.error('Variant image upload failed:', error);
+    }
+  }
+
+  setCurrentVariant(prev => ({
+    ...prev,
+    images: [...(prev.images || []), ...uploadedImages]
+  }));
+
+  setUploadingImages(false);
+};
+
 
     const addVariant = () => {
         if (!currentVariant.variantName || !currentVariant.sku) {
@@ -213,6 +222,30 @@ const ProductListingForm = () => {
         }));
     };
 
+
+    const handleAddNewAttribute = () => {
+        const trimmed = newAttributeName.trim();
+        if (!trimmed) return;
+
+        const alreadyExists = availableAttributes.some(
+            attr => attr.name.toLowerCase() === trimmed.toLowerCase()
+        );
+        if (alreadyExists) {
+            toast.error('Attribute already exists');
+            return;
+        }
+
+        const newAttr = {
+            // Temporary ID
+            name: trimmed,
+        };
+
+        setAvailableAttributes(prev => [...prev, newAttr]);
+        setNewAttributeName('');
+    };
+
+
+
     const addAttribute = (attributeId, value) => {
         const attribute = availableAttributes.find(attr => attr.id === parseInt(attributeId));
         if (!attribute) return;
@@ -226,20 +259,20 @@ const ProductListingForm = () => {
         }));
     };
 
-   const addSpecification = () => {
-  if (!currentSpecification.label || !currentSpecification.value) {
-    setErrors({ specification: 'Both label and value are required' });
-    return;
-  }
+    const addSpecification = () => {
+        if (!currentSpecification.label || !currentSpecification.value) {
+            setErrors({ specification: 'Both label and value are required' });
+            return;
+        }
 
-  setFormData(prev => ({
-    ...prev,
-    specifications: [...(prev.specifications || []), { ...currentSpecification, id: Date.now() }]
-  }));
+        setFormData(prev => ({
+            ...prev,
+            specifications: [...(prev.specifications || []), { ...currentSpecification, }]
+        }));
 
-  setCurrentSpecification({ label: '', value: '' });
-  setErrors({});
-};
+        setCurrentSpecification({ label: '', value: '' });
+        setErrors({});
+    };
     const removeSpecification = (index) => {
         setFormData(prev => ({
             ...prev,
@@ -258,29 +291,47 @@ const ProductListingForm = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (validateForm()) {
-            console.log('Form submitted:', formData);
-            alert('Product listed successfully!');
+            try {
+                const response = await fetch('/api/products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to submit product');
+                }
+
+                const result = await response.json();
+                console.log('Product created:', result);
+                alert('Product listed successfully!');
+                // Optionally reset form or navigate
+            } catch (error) {
+                console.error(error);
+                alert('Error submitting product: ' + error.message);
+            }
         }
     };
 
-     if (loading) return <FullScreenLoader />;
+
+    if (loading) return <FullScreenLoader />;
+
     return (
         <div className="min-h-screen bg-gray-50 py-0 md:py-2 overflow-x-hidden">
-
             <CategoryModal isOpen={showCategoryModal} onClose={() => setShowCategoryModal(false)} onCategoryAdded={() => {
                 fetchCategories();
                 setShowCategoryModal(false);
             }} />
-            {/* Show the modal when triggered */}
             <BrandModal isOpen={showModal} onClose={() => setShowModal(false)} onBrandAdded={() => {
                 fetchBrands();
                 setShowModal(false);
             }} />
+
             <div className="max-w-4xl mx-auto bg-white shadow-lg ">
-
-
                 <div className="bg-blue-500 text-white p-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                         {/* Left: Title and Subtitle */}
@@ -292,7 +343,6 @@ const ProductListingForm = () => {
 
 
                         </div>
-
                         {/* Right: Add Brand Button */}
                         <div className='flex  sm:ml-11 md:ml-0 flex-row md:justify-end items -center space-x-4 sm:justify-between'>
                             <button
@@ -311,9 +361,6 @@ const ProductListingForm = () => {
                                 ADD CATEGORY
                             </button>
                         </div>
-
-
-
                     </div>
                 </div>
 
@@ -618,7 +665,7 @@ const ProductListingForm = () => {
 
                         {/* Add New Variant */}
                         <div className="bg-blue-50 p-4 rounded-lg">
-                            <h3 className="font-medium mb-3">Add New Variant</h3>
+                            <h3 className="font-medium mb-3 uppercase">Add New Variant</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <input
                                     type="text"
@@ -653,11 +700,11 @@ const ProductListingForm = () => {
 
                             {/* Attributes */}
                             <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Attributes</label>
+                                <label className="block text-md font-medium text-gray-700 mb-2 uppercase">Attributes</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {availableAttributes.map(attr => (
                                         <div key={attr.id}>
-                                            <label className="block text-xs text-gray-600 mb-1">{attr.name}</label>
+                                            <label className="block text-md text-gray-600 mb-1 uppercase">{attr.name}</label>
                                             <input
                                                 type="text"
                                                 placeholder={`Enter ${attr.name.toLowerCase()}`}
@@ -667,6 +714,28 @@ const ProductListingForm = () => {
                                         </div>
                                     ))}
                                 </div>
+
+                                {/* Add New Attribute */}
+                                <div className="mt-4">
+                                    <label className="block text-md font-medium text-gray-600 mb-1 uppercase">Add New Attribute</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newAttributeName}
+                                            onChange={(e) => setNewAttributeName(e.target.value)}
+                                            placeholder="e.g., Finish"
+                                            className=" w-[49%] px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAddNewAttribute}
+                                            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex uppercase items-center"
+                                        >
+                                            ADD ATTRIBUTE
+                                        </button>
+                                    </div>
+                                </div>
+
                             </div>
 
                             {/* Variant Images */}
@@ -736,20 +805,7 @@ const ProductListingForm = () => {
                         </div>
                     </div>
 
-                    {/* Status */}
-                    <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            id="isActive"
-                            checked={formData.isActive}
-                            onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                            className="mr-2"
-                        />
-                        <label htmlFor="isActive" className="text-sm text-gray-700">
-                            Make product active and visible to customers
-                        </label>
-                    </div>
-
+                    
                     {/* Submit Button */}
                     <div className="flex justify-end pt-6">
                         <button
