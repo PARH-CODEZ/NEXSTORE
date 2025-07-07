@@ -13,169 +13,167 @@ model User {
   Email        String   @unique
   PasswordHash String
   PhoneNumber  String?
-  Role         String   // no enum, just plain string
+  Role         String // no enum, just plain string
   IsActive     Boolean  @default(true)
   CreatedAt    DateTime @default(now())
 }
 
 model UserAddress {
-  AddressID     Int      @id @default(autoincrement())
-  UserID        Int
-  AddressLine1  String
-  AddressLine2  String?
-  City          String
-  State         String?
-  PostalCode    String
-  Country       String
-  IsDefault     Boolean  @default(false)
-  AddressType   String?
-  CreatedAt     DateTime @default(now())
+  AddressID    Int      @id @default(autoincrement())
+  UserID       Int
+  AddressLine1 String
+  AddressLine2 String?
+  City         String
+  State        String?
+  PostalCode   String
+  Country      String
+  IsDefault    Boolean  @default(false)
+  AddressType  String?
+  CreatedAt    DateTime @default(now())
 
   @@index([UserID])
 }
 
 model SellerProfile {
-  SellerID        Int      @id
-  BusinessName    String?
-  GSTNumber String?
-  TotalProducts   Int      @default(0)
-  TotalOrders     Int      @default(0)
-  Rating          Float?
-  CreatedAt       DateTime @default(now())
+  SellerID      Int      @id
+  BusinessName  String?
+  GSTNumber     String?
+  TotalProducts Int      @default(0)
+  TotalOrders   Int      @default(0)
+  Rating        Float?
+  CreatedAt     DateTime @default(now())
 }
 
-
-
 model Categories {
-  CategoryID       Int       @id @default(autoincrement())
-  CategoryName     String
-  Description      String?
-  Slug             String?
-  DisplayImageURL  String?
-  CreatedAt        DateTime  @default(now())
-  UpdatedAt        DateTime  @updatedAt
+  CategoryID      Int      @id @default(autoincrement())
+  CategoryName    String
+  Description     String?
+  Slug            String?
+  DisplayImageURL String?
+  CreatedAt       DateTime @default(now())
+  UpdatedAt       DateTime @updatedAt
 
-  products         Product[] @relation("CategoryProducts")
+  products Product[] @relation("CategoryProducts")
 }
 
 model Brand {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  imageUrl  String    @db.VarChar(255)
-  createdAt DateTime  @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  imageUrl  String   @db.VarChar(255)
+  createdAt DateTime @default(now())
 
-  products  Product[] @relation("BrandProducts")
+  products Product[] @relation("BrandProducts")
 }
 
 model Product {
-  id              Int              @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   categoryId      Int
   brandId         Int?
-  name            String           @db.VarChar(150)
-  slug            String           
-  description     String?          
-  price           Decimal          @db.Decimal(18, 2)
-  discountPercent Decimal          @default(0) @db.Decimal(5, 2)
-  isActive        Boolean          @default(true)
-  isApproved      Boolean          @default(false)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  name            String
+  slug            String
+  description     String?
+  price           Decimal  @db.Decimal(18, 2)
+  discountPercent Decimal  @default(0) @db.Decimal(5, 2)
+  isActive        Boolean  @default(true)
+  isApproved      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  category        Categories       @relation(fields: [categoryId], references: [CategoryID], name: "CategoryProducts")
-  brand           Brand?           @relation(fields: [brandId], references: [id], name: "BrandProducts")
+  category Categories @relation(fields: [categoryId], references: [CategoryID], name: "CategoryProducts")
+  brand    Brand?     @relation(fields: [brandId], references: [id], name: "BrandProducts")
 
-  images          ProductImage[]
-  displayImages   ProductDisplayImage[]
-  variants        ProductVariant[]
-  specifications  ProductSpecification[]
-  reviews         ProductReview[]
-}
-
-model ProductImage {
-  id         Int              @id @default(autoincrement())
-  productId  Int?
-  variantId  Int?
-  imageUrl   String           @db.VarChar(255)
-  isPrimary  Boolean          @default(false)
-
-  product    Product?         @relation(fields: [productId], references: [id])
-  variant    ProductVariant?  @relation(fields: [variantId], references: [id], name: "VariantImages")
-
-  @@index([productId])
-  @@index([variantId])
+  images         ProductImage[]
+  displayImages  ProductDisplayImage[]
+  variants       ProductVariant[]
+  specifications ProductSpecification[]
+  reviews        ProductReview[]
 }
 
 model ProductDisplayImage {
   id        Int     @id @default(autoincrement())
   productId Int
-  imageUrl  String
+  imageUrl  String  @db.VarChar(255)
   isPrimary Boolean @default(false)
 
-  product    Product?         @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
   @@index([productId])
 }
 
-model ProductVariant {
-  id                Int                        @id @default(autoincrement())
-  productId         Int
-  sku               String                     @unique
-  variantName       String                     @db.VarChar(150)
-  additionalPrice   Decimal                    @default(0) @db.Decimal(18, 2)
-  quantityAvailable Int                        @default(0)
-  isActive          Boolean                    @default(true)
-  createdAt         DateTime                   @default(now())
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  productId Int?
+  variantId Int?
+  imageUrl  String  @db.VarChar(255)
+  isPrimary Boolean @default(false)
 
-  product           Product                    @relation(fields: [productId], references: [id])
-  attributeMapping  ProductVariantAttributeMap[]
-  images            ProductImage[]             @relation("VariantImages")
+  product Product?        @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id], name: "VariantImages")
+
+  @@index([productId])
+  @@index([variantId])
+}
+
+model ProductVariant {
+  id                Int      @id @default(autoincrement())
+  productId         Int
+  sku               String   @unique
+  variantName       String   @db.VarChar(150)
+  additionalPrice   Decimal  @default(0) @db.Decimal(18, 2)
+  quantityAvailable Int      @default(0)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+
+  product          Product                      @relation(fields: [productId], references: [id])
+  attributeMapping ProductVariantAttributeMap[]
+  images           ProductImage[]               @relation("VariantImages")
 
   @@index([productId])
 }
 
 model VariantAttribute {
-  id        Int                      @id @default(autoincrement())
-  name      String                   @unique @db.VarChar(50)
-  values    VariantAttributeValue[]
+  id     Int                     @id @default(autoincrement())
+  name   String                  @unique @db.VarChar(50)
+  values VariantAttributeValue[]
 }
 
 model VariantAttributeValue {
-  id          Int                      @id @default(autoincrement())
+  id          Int    @id @default(autoincrement())
   attributeId Int
-  value       String                   @db.VarChar(50)
+  value       String @db.VarChar(50)
 
-  attribute   VariantAttribute         @relation(fields: [attributeId], references: [id])
-  mappings    ProductVariantAttributeMap[]
+  attribute VariantAttribute             @relation(fields: [attributeId], references: [id])
+  mappings  ProductVariantAttributeMap[]
 }
 
 model ProductVariantAttributeMap {
-  id         Int                     @id @default(autoincrement())
-  variantId  Int
-  valueId    Int
+  id        Int @id @default(autoincrement())
+  variantId Int
+  valueId   Int
 
-  variant    ProductVariant          @relation(fields: [variantId], references: [id])
-  value      VariantAttributeValue   @relation(fields: [valueId], references: [id])
+  variant ProductVariant        @relation(fields: [variantId], references: [id])
+  value   VariantAttributeValue @relation(fields: [valueId], references: [id])
 
   @@index([variantId])
   @@index([valueId])
 }
 
 model ProductSpecification {
-  id        Int     @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   productId Int
-  label     String  @db.VarChar(100)
-  value     String  @db.VarChar(255)
+  label     String
+  value     String
 
-  product   Product @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }
 
 model ProductReview {
-  id         Int      @id @default(autoincrement())
-  productId  Int
-  userId     Int
-  rating     Int      @default(5)
-  review     String?
-  createdAt  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  productId Int
+  userId    Int
+  rating    Int      @default(5)
+  review    String?
+  createdAt DateTime @default(now())
 
-  product    Product  @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }

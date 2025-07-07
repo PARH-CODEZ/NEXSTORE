@@ -15,11 +15,12 @@ export async function POST(req) {
       discountPercent,
       isActive,
       images = [],
+      displayImages = [],
       specifications = [],
       variants = []
     } = body;
 
-    // ✅ Step 1: Directly create variantAttributeValue
+    // ✅ Step 1: Ensure all variant attributes have valueId
     for (const variant of variants) {
       for (const attr of variant.attributes) {
         const createdValue = await prisma.variantAttributeValue.create({
@@ -28,13 +29,11 @@ export async function POST(req) {
             value: attr.value.trim()
           }
         });
-
-        // Assign the created valueId to attach in mapping
         attr.valueId = createdValue.id;
       }
     }
 
-    // ✅ Step 2: Create the product
+    // ✅ Step 2: Create product
     const createdProduct = await prisma.product.create({
       data: {
         name,
@@ -44,9 +43,7 @@ export async function POST(req) {
         price: parseFloat(price),
         discountPercent: parseFloat(discountPercent || 0),
         category: {
-          connect: {
-            CategoryID: Number(categoryId)
-          }
+          connect: { CategoryID: Number(categoryId) }
         },
         ...(brandId && {
           brand: {
@@ -61,6 +58,12 @@ export async function POST(req) {
         },
         images: {
           create: images.map(img => ({
+            imageUrl: img.imageUrl,
+            isPrimary: img.isPrimary || false
+          }))
+        },
+        displayImages: {
+          create: displayImages.map(img => ({
             imageUrl: img.imageUrl,
             isPrimary: img.isPrimary || false
           }))
@@ -88,6 +91,7 @@ export async function POST(req) {
       },
       include: {
         specifications: true,
+        displayImages: true,
         variants: {
           include: {
             images: true,
@@ -109,14 +113,15 @@ export async function POST(req) {
   } catch (error) {
     console.error('❌ Error creating product:', error);
     return new Response(
-      JSON.stringify({ success: false, message: 'Failed to create product', error: error.message }),
+      JSON.stringify({
+        success: false,
+        message: 'Failed to create product',
+        error: error.message
+      }),
       { status: 500 }
     );
   }
 }
-
-
-// DELETE /api/products?id=123
 
 export async function DELETE(req) {
   try {
@@ -130,71 +135,58 @@ export async function DELETE(req) {
     const productId = Number(id);
 
     const product = await prisma.product.findUnique({
-      where: { id: productId },
+      where: { id: productId }
     });
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Delete attribute mappings for variants
+    // ✅ Clean related records
     await prisma.productVariantAttributeMap.deleteMany({
       where: {
-        variant: {
-          productId: productId,
-        },
-      },
+        variant: { productId }
+      }
     });
 
-    // Delete images that belong to variants
     await prisma.productImage.deleteMany({
       where: {
-        variant: {
-          productId: productId,
-        },
-      },
+        variant: { productId }
+      }
     });
 
-    // Delete variants
     await prisma.productVariant.deleteMany({
-      where: {
-        productId: productId,
-      },
+      where: { productId }
     });
 
-    // Delete product images not tied to a variant
     await prisma.productImage.deleteMany({
       where: {
-        productId: productId,
-        variantId: null,
-      },
+        productId,
+        variantId: null
+      }
     });
 
-    // Delete specifications
+    await prisma.productDisplayImage.deleteMany({
+      where: {
+        productId
+      }
+    });
+
     await prisma.productSpecification.deleteMany({
-      where: {
-        productId: productId,
-      },
+      where: { productId }
     });
 
-    // Delete reviews
     await prisma.productReview.deleteMany({
-      where: {
-        productId: productId,
-      },
+      where: { productId }
     });
 
-    // Delete the product
     await prisma.product.delete({
-      where: {
-        id: productId,
-      },
+      where: { id: productId }
     });
 
     return NextResponse.json({ message: 'Product deleted successfully' }, { status: 200 });
   } catch (error) {
-    console.error('Error deleting product:', error);
+    console.error('❌ Error deleting product:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
