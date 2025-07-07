@@ -25,13 +25,13 @@ const ImageScroller = () => {
   return (
     <div className="w-full max-w-full p-2 md:p-0">
       {/* Container with fixed aspect ratio */}
-      <div className="relative w-full aspect-[16/7] rounded-xl overflow-hidden">
+      <div className="relative w-full aspect-[16/7]  overflow-hidden">
         {slides.map((slide, index) => (
           <img
             key={slide.id}
             src={slide.url}
             alt={`Slide ${index + 1}`}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity scale-160 translate-y-[50px] md:scale-100 md:translate-y-[0px] duration-1000 ease-in-out ${
               index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
             draggable={false}

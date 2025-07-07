@@ -1,3 +1,6 @@
 @import "tailwindcss";
 
 
+.no-scroll {
+  overflow: hidden;
+}

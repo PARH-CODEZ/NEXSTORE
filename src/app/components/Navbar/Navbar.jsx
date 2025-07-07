@@ -179,43 +179,37 @@ const Navbar = ({ notFixed = false }) => {
 
     /* ── render ─────────────────────────────────── */
     return (
-        <div
-            className={
-                `bg-[#0D0D0D] text-white z-50 w-full p-[10px] pt-[25px] md:p-2 ` +
-                (notFixed ? '' : 'sticky top-0')
-            }
-        >
-
-            <div className="mx-auto px-4">
+        <div className={`bg-[#0D0D0D] text-white z-50  p-[10px] pt-[25px] md:py-4 ${notFixed ? '' : 'sticky top-0'}`}>
+            <div className="w-full px-2">
                 <div className=" items-center h-[140px] md:flex md:h-[50px]">
                     {/* Logo */}
                     <Link
                         href="/"
-                        className="font-bold text-3xl md:text-2xl cursor-pointer select-none relative z-50"
+                        className="font-bold text-xl md:text-sm lg:text-md  xl:text-2xl cursor-pointer select-none relative z-50"
                     >
                         NEXSTORE
                     </Link>
                     <div className='flex flex-col-reverse md:flex-none md:flex-row md:flex-grow md:items-center'>
 
-                        <Link href="/account">
+                        <Link href="/account"> 
                             <div className="flex md:hidden items-center px-1 py-2 gap-2 text-md border-t border-gray-700">
                                 <MapPin size={20} />
                                 <div>
-                                    <span className="text-gray-300 uppercase">Delivering to {defaultPostalCode || '400001'}</span> •{' '}
-                                    <span className="font-semibold underline uppercase"> {defaultCity || 'Update Location'}</span>
+                                    <span className="text-gray-300  uppercase">Delivering to {defaultPostalCode || '400001'}</span> •{' '}
+                                    <span className="font-semibold text-md underline uppercase"> {defaultCity || 'Update Location'}</span>
                                 </div>
                             </div>
                         </Link>
 
 
                         <Link href="/account">
-                            <div className="hidden sm:flex items-center px-3 py-1 hover:bg-gray-800 rounded cursor-pointer select-none max-w-[220px] truncate">
+                            <div className="hidden sm:flex items-center px-2 py-1 hover:bg-gray-800 rounded cursor-pointer select-none max-w-[220px] truncate">
                                 <MapPin size={20} className="mr-2" />
                                 <div>
-                                    <div className="text-gray-300 text-xs uppercase truncate">
+                                    <div className="text-gray-300 text-xs md:text-[10px] lg:text-xs uppercase truncate">
                                         Delivering to {defaultPostalCode || '400001'}
                                     </div>
-                                    <div className="font-medium text-sm uppercase underline">
+                                    <div className="font-medium text-xs md:text-[10px] lg:text-xs uppercase underline">
                                         {defaultCity || 'Update Location'}
                                     </div>
                                 </div>
@@ -224,10 +218,8 @@ const Navbar = ({ notFixed = false }) => {
 
 
 
-                        <div className="flex px-2 py-1 text-md gap-3 font-semibold border-t border-gray-700 md:hidden mt-[10px]">
-                            <span className="cursor-pointer">CATEGORY</span>
-                            <span className="cursor-pointer">DEALS</span>
-                            <span className="cursor-pointer">SALE</span>
+                        <div className="flex px-2 py-1 text-sm gap-3 font-semibold  border-gray-700 md:hidden mt-[10px]">
+                            
                         </div>
 
 
@@ -359,9 +351,9 @@ const Navbar = ({ notFixed = false }) => {
 
 
                         {/* Right‑hand actions */}
-                        <div className="flex justify-end space-x-3 md: space-x items-center select-none mt-[-30px] md:mt-0">
+                        <div className="flex justify-end space-x-2 md: space-x items-center select-none mt-[-35px] md:mt-0">
                             {/* Language */}
-                            <div className=" hidden md:flex flex flex-row items-center px-2 py-1 hover:bg-gray-800 rounded cursor-pointer">
+                            <div className=" hidden lg:flex flex flex-row items-center px-2 py-1 hover:bg-gray-800 rounded cursor-pointer">
                                 <Globe size={20} className="mr-1" />
                                 <span className="font-semibold text-lg">EN</span>
                             </div>
@@ -374,19 +366,19 @@ const Navbar = ({ notFixed = false }) => {
                             >
 
                                 {/* Desktop: HELLO, {name} */}
-                                <span className="text-gray-300 hidden md:block">
+                                <span className="text-gray-300 hidden md:block md:text-[10px] lg:text-[14px]">
                                     HELLO, {firstName || ''}
                                 </span>
 
                                 {/* Desktop: ACCOUNT */}
-                                <span className="font-semibold hidden md:flex truncate">ACCOUNT & LISTS ▼</span>
+                                <span className="font-semibold hidden md:flex truncate md:text-[10px] lg:text-[14px]">ACCOUNT & LISTS ▼</span>
 
                             </div>
 
                             <div className="flex items-center text-gray-300 md:hidden space-x-1 "
                                 onClick={() => setSidebarOpen(true)}>
                                 <User size={25} className="font-bold" />
-                                <span className="text-xl font-semibold">
+                                <span className="text-md font-semibold">
                                     {user ? user.name.trim().split(' ')[0] : 'SIGN IN'}
                                 </span>
                             </div>
@@ -397,13 +389,13 @@ const Navbar = ({ notFixed = false }) => {
                             <div onClick={handleClick} className="hidden md:flex flex-col px-2 py-1 hover:bg-gray-800 rounded cursor-pointer text-sm leading-tight">
                                 {user?.role === 'seller' ? (
                                     <>
-                                        <span className="text-gray-300">LIST NEW </span>
-                                        <span className="font-semibold uppercase">PRODUCT </span>
+                                        <span className="text-gray-300 md:text-[10px] lg:text-[14px] ">LIST NEW </span>
+                                        <span className="font-semibold uppercase md:text-[10px] lg:text-[14px]">PRODUCT </span>
                                     </>
                                 ) : (
                                     <>
-                                        <span className="text-gray-300">RETURNS</span>
-                                        <span className="font-semibold uppercase truncate">&amp; ORDERS</span>
+                                        <span className="text-gray-300 md:text-[10px] lg:text-[14px] ">RETURNS</span>
+                                        <span className="font-semibold uppercase truncate md:text-[10px] lg:text-[14px]">&amp; ORDERS</span>
                                     </>
                                 )}
                             </div>
@@ -415,7 +407,7 @@ const Navbar = ({ notFixed = false }) => {
                                     <span className="absolute -top-0 -right-1 bg-[#FF9900] text-gray-900 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                                         0
                                     </span>
-                                    <span className="ml-1 font-semibold hidden sm:inline">CART</span>
+                                    <span className="ml-1 font-semibold hidden sm:inline md:hidden lg:block">CART</span>
                                 </div>
                             </Link>
                         </div>
