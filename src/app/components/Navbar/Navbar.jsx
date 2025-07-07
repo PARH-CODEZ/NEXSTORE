@@ -109,6 +109,19 @@ const Navbar = ({ notFixed = false }) => {
     const [showResults, setShowResults] = useState(false);
     const resultsRef = useRef(null);
 
+function truncateName(name, maxLength = 10) {
+  if (name.length <= maxLength) return name;
+  const words = name.split(' ');
+  let result = '';
+
+  for (let word of words) {
+    if ((result + word).length + 1 > maxLength) break;
+    result += word + ' ';
+  }
+
+  return result.trim() + '...';
+}
+
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -191,7 +204,7 @@ const Navbar = ({ notFixed = false }) => {
                     </Link>
                     <div className='flex flex-col-reverse md:flex-none md:flex-row md:flex-grow md:items-center'>
 
-                        <Link href="/account"> 
+                        <Link href="/account">
                             <div className="flex md:hidden items-center px-1 py-2 gap-2 text-md border-t border-gray-700">
                                 <MapPin size={20} />
                                 <div>
@@ -219,7 +232,7 @@ const Navbar = ({ notFixed = false }) => {
 
 
                         <div className="flex px-2 py-1 text-sm gap-3 font-semibold  border-gray-700 md:hidden mt-[10px]">
-                            
+
                         </div>
 
 
@@ -314,8 +327,9 @@ const Navbar = ({ notFixed = false }) => {
                                                     onClick={() => handleSelectProduct(prod)}
                                                 >
                                                     <div className="text-lg font-semibold text-purple-500 uppercase">
-                                                        {prod.name}
+                                                        {truncateName(prod.name, 20)}
                                                     </div>
+
                                                     <div className="text-gray-600 text-sm uppercase">
                                                         IN {prod.categoryName}
                                                     </div>

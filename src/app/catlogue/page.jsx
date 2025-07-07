@@ -53,6 +53,15 @@ const ProductListingForm = () => {
         }
     };
 
+
+    
+
+    useEffect(() => {
+        if (isSubmitted) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [isSubmitted]);
+
     useEffect(() => {
         fetchBrands()
         fetchCategories();
@@ -62,36 +71,36 @@ const ProductListingForm = () => {
 
 
 
-      useEffect(() => {
+    //   useEffect(() => {
 
 
-        const idtodelete =[27,28,29,30,31,32]
-        for ( const id of idtodelete ){
-             const deleteProduct = async () => {
-          try {
-            const res = await fetch(`/api/products?id=${id}`, {
-              method: 'DELETE',
-            });
+    //     const idtodelete =[27,28,29,30,31,32]
+    //     for ( const id of idtodelete ){
+    //          const deleteProduct = async () => {
+    //       try {
+    //         const res = await fetch(`/api/products?id=${id}`, {
+    //           method: 'DELETE',
+    //         });
 
-            if (res.ok) {
-              // Try to parse only if there is content
-              const text = await res.text();
-              const data = text ? JSON.parse(text) : {};
-              console.log('✅ Product deleted:', data);
-            } else {
-              const text = await res.text();
-              const error = text ? JSON.parse(text) : {};
-              console.error('❌ Delete failed:', error.error || 'Unknown error');
-            }
-          } catch (error) {
-            console.error('🚫 Error deleting product:', error);
-          }
-        };
-        deleteProduct();
-        }
+    //         if (res.ok) {
+    //           // Try to parse only if there is content
+    //           const text = await res.text();
+    //           const data = text ? JSON.parse(text) : {};
+    //           console.log('✅ Product deleted:', data);
+    //         } else {
+    //           const text = await res.text();
+    //           const error = text ? JSON.parse(text) : {};
+    //           console.error('❌ Delete failed:', error.error || 'Unknown error');
+    //         }
+    //       } catch (error) {
+    //         console.error('🚫 Error deleting product:', error);
+    //       }
+    //     };
+    //     deleteProduct();
+    //     }
 
 
-      }, []);
+    //   }, []);
 
 
 
@@ -102,6 +111,7 @@ const ProductListingForm = () => {
 
 
     const [formData, setFormData] = useState({
+        title:'',
         name: '',
         categoryId: '',
         brandId: '',
@@ -421,7 +431,7 @@ const ProductListingForm = () => {
 
                 const result = await response.json();
                 console.log('Product created:', result);
-               
+
                 setIsSubmitted(true); // 👈 Update state
             } catch (error) {
                 console.error(error);
@@ -522,6 +532,21 @@ const ProductListingForm = () => {
                                             onChange={(e) => handleInputChange('name', e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             placeholder="Enter product name"
+                                        />
+                                        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                                    </div>
+
+
+                                     <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 uppercase">
+                                            Product Title *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.title}
+                                            onChange={(e) => handleInputChange('title', e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            placeholder="Enter product title"
                                         />
                                         {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                                     </div>
