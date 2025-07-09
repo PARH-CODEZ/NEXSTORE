@@ -7,8 +7,12 @@ import FullScreenLoader from '../components/FullScreenLoader/FullScreenLoader';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar/Navbar';
 import ProductSuccessPage from '../components/ProductSuccessPage/Productsuccesspage';
+import { useSelector } from 'react-redux';
 
 const ProductListingForm = () => {
+
+    const user = useSelector((state) => state.user.user);
+
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [loading, setLoading] = useState(false)
     const [categories, setCategories] = useState([]);
@@ -53,9 +57,6 @@ const ProductListingForm = () => {
         }
     };
 
-
-    
-
     useEffect(() => {
         if (isSubmitted) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -68,53 +69,46 @@ const ProductListingForm = () => {
         fetchVariantAttributes()
     }, []);
 
+ 
+    // useEffect(() => {
+    //     const idtodelete = [3, 5, 6,]
+    //     for (const id of idtodelete) {
+    //         const deleteProduct = async () => {
+    //             try {
+    //                 const res = await fetch(`/api/products?id=${id}`, {
+    //                     method: 'DELETE',
+    //                 });
 
-
-
-    //   useEffect(() => {
-
-
-    //     const idtodelete =[27,28,29,30,31,32]
-    //     for ( const id of idtodelete ){
-    //          const deleteProduct = async () => {
-    //       try {
-    //         const res = await fetch(`/api/products?id=${id}`, {
-    //           method: 'DELETE',
-    //         });
-
-    //         if (res.ok) {
-    //           // Try to parse only if there is content
-    //           const text = await res.text();
-    //           const data = text ? JSON.parse(text) : {};
-    //           console.log('✅ Product deleted:', data);
-    //         } else {
-    //           const text = await res.text();
-    //           const error = text ? JSON.parse(text) : {};
-    //           console.error('❌ Delete failed:', error.error || 'Unknown error');
-    //         }
-    //       } catch (error) {
-    //         console.error('🚫 Error deleting product:', error);
-    //       }
-    //     };
-    //     deleteProduct();
+    //                 if (res.ok) {
+    //                     // Try to parse only if there is content
+    //                     const text = await res.text();
+    //                     const data = text ? JSON.parse(text) : {};
+    //                     console.log('Product deleted:', data);
+    //                 } else {
+    //                     const text = await res.text();
+    //                     const error = text ? JSON.parse(text) : {};
+    //                     console.error(' Delete failed:', error.error || 'Unknown error');
+    //                 }
+    //             } catch (error) {
+    //                 console.error(' Error deleting product:', error);
+    //             }
+    //         };
+    //         deleteProduct();
     //     }
 
 
-    //   }, []);
-
+    // }, []);
 
 
     const [showModal, setShowModal] = useState(false);
     const [showCategoryModal, setShowCategoryModal] = useState(false)
 
-
-
-
     const [formData, setFormData] = useState({
-        title:'',
+        title: '',
         name: '',
         categoryId: '',
         brandId: '',
+        sellerId: user?.id || '',  
         description: '',
         price: '',
         discountPercent: '',
@@ -309,7 +303,6 @@ const ProductListingForm = () => {
     };
 
 
-
     const addVariant = () => {
         if (!currentVariant.variantName || !currentVariant.sku) {
             setErrors({ variant: 'Variant name and SKU are required' });
@@ -340,25 +333,19 @@ const ProductListingForm = () => {
     };
 
 
-    // 1) When adding a new attribute:
     const handleAddNewAttribute = async () => {
         const trimmed = newAttributeName.trim();
         if (!trimmed) return;
-
-        // Call your backend to create the attribute
         const res = await fetch('/api/variant-attributes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: trimmed })
         });
-        const { attribute } = await res.json(); // attribute.id is now a valid int
-
-        // 2) Add the real attribute into your dropdown list
-        setAvailableAttributes(prev => [...prev, attribute]);
+        const { attribute } = await res.json(); 
+    
         setNewAttributeName('');
+        fetchVariantAttributes()
     };
-
-
 
     const getAttributeValue = (attributeId) => {
         const found = currentVariant.attributes.find(attr => attr.attributeId === attributeId);
@@ -373,8 +360,8 @@ const ProductListingForm = () => {
             attributes: [
                 ...prev.attributes.filter(attr => attr.attributeId !== attributeId),
                 {
-                    attributeId: attribute.id,         // ✅ Include this
-                    attributeName: attribute.name,     // optional
+                    attributeId: attribute.id,         
+                    attributeName: attribute.name,    
                     value: value
                 }
             ]
@@ -413,6 +400,7 @@ const ProductListingForm = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+
     const handleSubmit = async () => {
         if (validateForm()) {
             try {
@@ -432,7 +420,7 @@ const ProductListingForm = () => {
                 const result = await response.json();
                 console.log('Product created:', result);
 
-                setIsSubmitted(true); // 👈 Update state
+                setIsSubmitted(true); 
             } catch (error) {
                 console.error(error);
                 alert('Error submitting product: ' + error.message);
@@ -537,7 +525,7 @@ const ProductListingForm = () => {
                                     </div>
 
 
-                                     <div>
+                                    <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2 uppercase">
                                             Product Title *
                                         </label>

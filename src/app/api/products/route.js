@@ -11,6 +11,7 @@ export async function POST(req) {
       slug,
       categoryId,
       brandId,
+      sellerId,
       description,
       price,
       discountPercent,
@@ -21,7 +22,7 @@ export async function POST(req) {
       variants = []
     } = body;
 
-    // ✅ Step 1: Ensure all variant attributes have valueId
+    //  Step 1: Ensure all variant attributes have valueId
     for (const variant of variants) {
       for (const attr of variant.attributes) {
         const createdValue = await prisma.variantAttributeValue.create({
@@ -34,9 +35,10 @@ export async function POST(req) {
       }
     }
 
-    // ✅ Step 2: Create product
+    //  Step 2: Create product
     const createdProduct = await prisma.product.create({
       data: {
+        sellerId: Number(sellerId),
         title,
         name,
         slug,
@@ -52,6 +54,8 @@ export async function POST(req) {
             connect: { id: Number(brandId) }
           }
         }),
+       
+
         specifications: {
           create: specifications.map(spec => ({
             label: spec.label,
@@ -144,7 +148,7 @@ export async function DELETE(req) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // ✅ Clean related records
+    //  Clean related records
     await prisma.productVariantAttributeMap.deleteMany({
       where: {
         variant: { productId }

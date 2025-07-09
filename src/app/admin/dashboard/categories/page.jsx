@@ -11,10 +11,6 @@ const CategoryPage = () => {
     const [categories, setCategories] = useState([]);
     const [deletingId, setDeletingId] = useState(null);
 
-
-
-
-
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this category?')) return;
 
@@ -31,7 +27,6 @@ const CategoryPage = () => {
             setDeletingId(null);
         }
     };
-
 
 
     async function fetchCategories() {
@@ -51,10 +46,6 @@ const CategoryPage = () => {
 
         fetchCategories();
     }, []);
-
-
-
-
 
 
     const [isModalOpen, setIsModalOpen] = useState(false);

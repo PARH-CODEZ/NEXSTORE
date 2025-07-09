@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 export default function BrandModal({ isOpen, onClose ,onBrandAdded }) {
   const [name, setName] = useState('');
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null); // 👈 For local preview
+  const [imagePreview, setImagePreview] = useState(null); 
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +37,7 @@ export default function BrandModal({ isOpen, onClose ,onBrandAdded }) {
       const data = await res.json();
 
       if (!data.secure_url) {
-        console.error('Cloudinary response:', data); // 👈 Inspect what went wrong
+        console.error('Cloudinary response:', data); 
         throw new Error('Upload failed');
       }
 

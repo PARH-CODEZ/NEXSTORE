@@ -1,7 +1,5 @@
-// /app/api/variant-attributes/route.js
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { toast } from 'react-toastify';
 
 export async function POST(req) {
   try {
@@ -14,28 +12,33 @@ export async function POST(req) {
       );
     }
 
-    const trimmedName = name.trim();
+    const normalizedName = name.trim().toLowerCase();
 
-    // ✅ Check if it already exists
+   
     const existing = await prisma.variantAttribute.findFirst({
-      where: { name: trimmedName }
+      where: {
+        name: {
+          equals: normalizedName,
+          mode: 'insensitive' // Prisma-level case-insensitive match
+        }
+      }
     });
 
     if (existing) {
       return NextResponse.json({ success: true, attribute: existing });
     }
 
-    // ✅ Create new only if not exists
+    // Create new attribute with normalized name
     const attribute = await prisma.variantAttribute.create({
       data: {
-        name: trimmedName
+        name: normalizedName
       }
     });
 
     return NextResponse.json({ success: true, attribute });
 
   } catch (error) {
-    toast.error('❌ Error creating attribute:', error);
+    console.error('❌ Error creating attribute:', error);
     return NextResponse.json(
       { success: false, message: 'Failed to create attribute' },
       { status: 500 }
@@ -44,12 +47,10 @@ export async function POST(req) {
 }
 
 
-
-
 export async function GET() {
   try {
     const attributes = await prisma.variantAttribute.findMany({
-      orderBy: { name: 'asc' } // optional
+      orderBy: { name: 'asc' }
     });
 
     return NextResponse.json(attributes);

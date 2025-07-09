@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
 export async function POST(req, { params }) {
   try {
@@ -12,12 +12,13 @@ export async function POST(req, { params }) {
       minPrice = 0,
       maxPrice = 1000000,
       filters = [],
+      product: highlightProductId,
     } = body;
 
     const pageSize = 12;
     const parsedFilters = Array.isArray(filters) ? filters : [];
 
-    // ✅ Get the category
+
     const category = await prisma.categories.findFirst({
       where: { Slug: slug.toLowerCase() },
     });
@@ -26,21 +27,35 @@ export async function POST(req, { params }) {
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
     }
 
-    // ✅ Find selected brands from filters
-   // Filters brand by name directly
-const brandFilters = await prisma.brand.findMany({
-  where: {
-    name: { in: parsedFilters }, // parsedFilters = ["samsung"]
-  },
-  select: { name: true },
-});
+    //  Get max price in this category
+    const maxPriceInCategory = await prisma.product.aggregate({
+      where: {
+        categoryId: category.CategoryID,
+        isActive: true,
+        isApproved: true,
+      },
+      _max: {
+        price: true,
+      },
+    });
 
+    const maxPriceLimit = maxPriceInCategory._max.price
+      ? Number(maxPriceInCategory._max.price) + 10000
+      : 1000000;
 
-    const selectedBrandNames = brandFilters.map((b) => b.name);
-    const nonBrandFilters = parsedFilters.filter(f => !selectedBrandNames.includes(f));
+    // Get matched brands
+    const brandFilters = await prisma.brand.findMany({
+      where: {
+        name: { in: parsedFilters },
+      },
+      select: { name: true },
+    });
 
-    // ✅ Final product filter
-    const productWhere = {
+    const matchedBrandNames = brandFilters.map(b => b.name);
+    const nonBrandFilters = parsedFilters.filter(f => !matchedBrandNames.includes(f));
+
+    //  Build base where clause
+    const baseWhere = {
       categoryId: category.CategoryID,
       isActive: true,
       isApproved: true,
@@ -48,12 +63,21 @@ const brandFilters = await prisma.brand.findMany({
         gte: +minPrice,
         lte: +maxPrice,
       },
-      ...(selectedBrandNames.length > 0 && {
-        brand: {
-          name: { in: selectedBrandNames },
-        },
-      }),
-      ...(nonBrandFilters.length > 0 && {
+    };
+
+    // Add brand filter only if matches found
+    if (matchedBrandNames.length > 0) {
+      baseWhere.brand = {
+        name: { in: matchedBrandNames },
+      };
+    }
+
+    // ✅ Add non-brand filters only if they match specs/variant values
+    const applyNonBrandFilters = nonBrandFilters.length > 0;
+
+    const productWhere = {
+      ...baseWhere,
+      ...(applyNonBrandFilters && {
         OR: [
           {
             variants: {
@@ -79,16 +103,57 @@ const brandFilters = await prisma.brand.findMany({
       }),
     };
 
-    // ✅ Count total
-    const totalProducts = await prisma.product.count({ where: productWhere });
+    // Total product count (exclude highlighted)
+    const totalProducts = await prisma.product.count({
+      where: {
+        ...productWhere,
+        ...(highlightProductId && {
+          NOT: { id: Number(highlightProductId) },
+        }),
+      },
+    });
 
-    // ✅ Fetch products
-    const products = await prisma.product.findMany({
-      where: productWhere,
+    //  Fetch regular products
+    const regularProducts = await prisma.product.findMany({
+      where: {
+        ...productWhere,
+        ...(highlightProductId && {
+          NOT: { id: Number(highlightProductId) },
+        }),
+      },
       select: {
         id: true,
         name: true,
         price: true,
+        discountPercent: true,
+        images: {
+          take: 1, // only send the first image
+          select: { imageUrl: true },
+        },
+        category: { select: { Slug: true } },
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
+        variants: {
+          take: 1,
+          select: {
+            images: {
+              take: 1,
+              select: {
+                imageUrl: true, // or use the correct field name like `url` if it's different
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            reviews: true,
+            variants: true,
+          },
+
+        },
       },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -96,11 +161,58 @@ const brandFilters = await prisma.brand.findMany({
         sort === 'PriceLowToHigh'
           ? { price: 'asc' }
           : sort === 'PriceHighToLow'
-          ? { price: 'desc' }
-          : { createdAt: 'desc' },
+            ? { price: 'desc' }
+            : { createdAt: 'desc' },
     });
 
-    // ✅ All brands under this category
+    // ✅ Fetch highlighted product (if needed)
+    let highlightedProduct = null;
+    if (highlightProductId) {
+      highlightedProduct = await prisma.product.findUnique({
+        where: { id: Number(highlightProductId) },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          discountPercent: true,
+          images: {
+            take: 1, // only send the first image
+            select: { imageUrl: true },
+          },
+          category: { select: { Slug: true } },
+          reviews: {
+            select: {
+              rating: true,
+            },
+          },
+          variants: {
+            take: 1,
+            select: {
+              images: {
+                take: 1,
+                select: {
+                  imageUrl: true, // or use the correct field name like `url` if it's different
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              reviews: true,
+              variants: true,
+
+            },
+
+          },
+        },
+      });
+    }
+
+    const products = highlightedProduct
+      ? [highlightedProduct, ...regularProducts]
+      : regularProducts;
+
+    // ✅ Brands under category
     const brands = await prisma.brand.findMany({
       where: {
         products: {
@@ -115,19 +227,17 @@ const brandFilters = await prisma.brand.findMany({
       distinct: ['name'],
     });
 
-    // ✅ Specifications (label + values)
+    // ✅ Specifications under category
     const specResults = await prisma.productSpecification.findMany({
       where: {
         product: {
           categoryId: category.CategoryID,
           isActive: true,
           isApproved: true,
+
         },
       },
-      select: {
-        label: true,
-        value: true,
-      },
+      select: { label: true, value: true },
       distinct: ['label', 'value'],
     });
 
@@ -142,7 +252,7 @@ const brandFilters = await prisma.brand.findMany({
       Array.from(values),
     ]);
 
-    // ✅ Variant Attributes (Color, RAM, etc.)
+    // ✅ Variant Attributes
     const attrValues = await prisma.variantAttributeValue.findMany({
       where: {
         mappings: {
@@ -159,19 +269,14 @@ const brandFilters = await prisma.brand.findMany({
       },
       select: {
         value: true,
-        attribute: {
-          select: {
-            name: true,
-          },
-        },
+        attribute: { select: { name: true } },
       },
     });
 
     const attrMap = {};
-    for (const item of attrValues) {
-      const key = item.attribute.name;
-      if (!attrMap[key]) attrMap[key] = new Set();
-      attrMap[key].add(item.value);
+    for (const { value, attribute } of attrValues) {
+      if (!attrMap[attribute.name]) attrMap[attribute.name] = new Set();
+      attrMap[attribute.name].add(value);
     }
 
     const attributeFilters = Object.entries(attrMap).map(([name, values]) => ({
@@ -179,16 +284,17 @@ const brandFilters = await prisma.brand.findMany({
       values: Array.from(values),
     }));
 
-    // ✅ Return response
- return NextResponse.json({
-  totalProducts,
-  products,
-  brands,
-  specifications,
-  attributeFilters, // ✅ match frontend
-});
+    return NextResponse.json({
+      totalProducts: highlightedProduct ? totalProducts + 1 : totalProducts,
+      products,
+      brands,
+      specifications,
+      attributes: attributeFilters,
+      maxPrice: maxPriceLimit,
+    });
+
   } catch (error) {
-    console.error('❌ Error fetching category data:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    console.error('❌ Error:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

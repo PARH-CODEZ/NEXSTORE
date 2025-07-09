@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp, X, SlidersHorizontal } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -10,15 +9,10 @@ import ProductGrid from '@/app/components/ProductCard/ProductCard';
 
 export default function CategoryPage() {
 
-
-
-
-
   const pathname = usePathname();
   const [slug, setSlug] = useState('');
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [specifications, setSpecifications] = useState([]);
   const [attributes, setAttributes] = useState([]);
   const [totalResults, setTotalResults] = useState(0);
   const [showAll, setShowAll] = useState(false);
@@ -29,11 +23,18 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(false);
 
   const MIN = 0;
-  const [MAX, setMAX] = useState(135000);
+  const [MAX, setMAX] = useState(1000000);
   const [values, setValues] = useState([MIN, MAX]);
   const STEP = 1000;
 
   const visibleBrands = showAll ? brands : brands.slice(0, 7);
+
+  useEffect(() => {
+    setValues(prev => {
+      const [min] = prev;
+      return [min, MAX];
+    });
+  }, [MAX]);
 
   useEffect(() => {
     if (pathname.startsWith('/category/')) {
@@ -82,9 +83,9 @@ export default function CategoryPage() {
 
       const data = await res.json();
       console.log(data)
-      setProducts(data.products);
+      setMAX(data.maxPrice)
+      setProducts(Array.isArray(data.products) ? data.products : []);
       setBrands(data.brands || []);
-      setSpecifications(data.specifications || []);
       setAttributes(data.attributes || []); // ✅ use `attributes` not `attributeFilters`
       setTotalResults(data.totalProducts || 0);
     } catch (error) {
@@ -93,6 +94,10 @@ export default function CategoryPage() {
       setLoading(false);
     }
   };
+
+  const safeValues = Array.isArray(values) && values.length === 2 && values.every(v => typeof v === 'number')
+    ? values
+    : [MIN, MAX];
 
   const handleFilterChange = (key) => {
     const updated = { ...selectedFilters, [key]: !selectedFilters[key] };
@@ -108,8 +113,6 @@ export default function CategoryPage() {
   const handlePriceGo = () => {
     fetchProducts(slug, getParsedFilterValues(), currentPage, sortBy, values);
   };
-
-
 
   useEffect(() => {
     if (showMobileFilters) {
@@ -236,7 +239,7 @@ export default function CategoryPage() {
                   step={STEP}
                   min={MIN}
                   max={MAX}
-                  values={values}
+                  values={safeValues}
                   onChange={setValues}
                   renderTrack={({ props, children }) => (
                     <div
@@ -255,13 +258,16 @@ export default function CategoryPage() {
                       {children}
                     </div>
                   )}
-                  renderThumb={({ props }, index) => (
-                    <div
-                      {...props}
-                      key={`thumb-${index}`}
-                      className="w-4 h-4 bg-teal-500 rounded-full shadow-md border-2 border-white"
-                    />
-                  )}
+                  renderThumb={(renderProps, index) => {
+                    const { key, ...restProps } = renderProps.props;
+                    return (
+                      <div
+                        key={key ?? `thumb-${index}`}
+                        {...restProps}
+                        className="w-4 h-4 bg-teal-500 rounded-full shadow-md border-2 border-white"
+                      />
+                    );
+                  }}
                 />
                 <div className="flex justify-between text-sm mt-4">
                   <span>Min: ₹{values[0]}</span>
@@ -276,7 +282,8 @@ export default function CategoryPage() {
               </div>
 
               {/* Attributes */}
-              {attributes.map((attr) => (
+              {/* Attributes */}
+              {products.length > 0 && attributes.map((attr) => (
                 <div key={attr.name} className="mt-6">
                   <h3 className="font-semibold text-md text-gray-900 mb-3 uppercase">{attr.name}</h3>
                   {attr.values.map((value) => {
@@ -300,33 +307,11 @@ export default function CategoryPage() {
                 </div>
               ))}
 
-              {/* Specifications */}
-              {specifications.map(([label, values]) => (
-                <div key={label} className="mt-6">
-                  <h3 className="font-semibold text-md text-gray-900 mb-3 uppercase">{label}</h3>
-                  {values.map((value) => {
-                    const key = `spec:${label.toLowerCase()}:${value.toLowerCase()}`;
-                    return (
-                      <label key={key} className="flex items-center text-sm mb-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedFilters[key] || false}
-                          onChange={() => handleFilterChange(key)}
-                          className="w-4 h-4 mr-3 accent-orange-500"
-                        />
-                        <span
-                          className={`uppercase ${selectedFilters[key] ? 'text-blue-600' : 'text-gray-700'}`}
-                        >
-                          {value}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              ))}
+
+
+
+
             </div>
-
-
 
             {/* Mobile sidebar*/}
             {showMobileFilters && (
@@ -423,10 +408,9 @@ export default function CategoryPage() {
                           {children}
                         </div>
                       )}
-                      renderThumb={({ props }, index) => (
+                      renderThumb={({ props }) => (
                         <div
                           {...props}
-                          key={`thumb-${index}`}
                           className="w-4 h-4 bg-teal-500 rounded-full shadow-md border-2 border-white"
                         />
                       )}
@@ -444,7 +428,7 @@ export default function CategoryPage() {
                   </div>
 
                   {/* Attributes */}
-                  {attributes.map((attr) => (
+                  {products.length > 0 && attributes.map((attr) => (
                     <div key={attr.name} className="mt-6">
                       <h3 className="font-semibold text-md text-gray-900 mb-3 uppercase">{attr.name}</h3>
                       {attr.values.map((value) => {
@@ -468,46 +452,11 @@ export default function CategoryPage() {
                     </div>
                   ))}
 
-                  {/* Specifications */}
-                  {specifications.map(([label, values]) => (
-                    <div key={label} className="mt-6">
-                      <h3 className="font-semibold text-md text-gray-900 mb-3 uppercase">{label}</h3>
-                      {values.map((value) => {
-                        const key = `spec:${label.toLowerCase()}:${value.toLowerCase()}`;
-                        return (
-                          <label key={key} className="flex items-center text-sm mb-2">
-                            <input
-                              type="checkbox"
-                              checked={selectedFilters[key] || false}
-                              onChange={() => handleFilterChange(key)}
-                              className="w-4 h-4 mr-3 accent-orange-500"
-                            />
-                            <span
-                              className={`uppercase ${selectedFilters[key] ? 'text-blue-600' : 'text-gray-700'}`}
-                            >
-                              {value}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  ))}
+
+
                 </div>
               </div>
             )}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             {/* Main Content */}
             <div className="flex-1 bg-white w-full p-6">
@@ -517,19 +466,20 @@ export default function CategoryPage() {
               </p>
 
               {loading ? (
-                <p>LOADING...</p>
-              ) : products.length === 0 ? (
+                <div className="flex justify-center items-center py-10">
+                  <div className="w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : products?.length === 0 ? (
                 <div className="flex justify-center items-center h-40">
                   <p className="text-blue-500 text-xl font-semibold uppercase">No products found.</p>
                 </div>
               ) : (
-                <ProductGrid/>
+                <ProductGrid products={products} />
               )}
 
-                
 
               {/* Pagination */}
-              {products.length > 0 && (
+              {products?.length > 0 && (
                 <div className="mt-10 flex justify-center gap-4">
                   <button
                     onClick={() => {

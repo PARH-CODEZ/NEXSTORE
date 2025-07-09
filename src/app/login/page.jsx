@@ -12,7 +12,6 @@ import { setUser } from '@/store/userSlice';
 import { toast } from 'react-toastify';
 
 
-
 const InputField = ({
   type = 'text',
   placeholder,
@@ -57,8 +56,8 @@ const InputField = ({
 const Login = () => {
  const dispatch = useDispatch();
 
-  const router = useRouter(); // Added router initialization
-  const [currentStep, setCurrentStep] = useState('initial'); // initial, signin, signup, password
+  const router = useRouter(); 
+  const [currentStep, setCurrentStep] = useState('initial'); //[ initial, signin, signup, password]
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -240,9 +239,9 @@ const Login = () => {
         return;
       }
 
-      toast.success('Account created successfully!'); // Added success message
-      resetForm();            // Clear inputs
-      setCurrentStep('initial'); // Go to signin or wherever you want
+      toast.success('Account created successfully!'); 
+      resetForm();          
+      setCurrentStep('initial'); 
 
     } catch (err) {
       console.error(err);
@@ -302,7 +301,7 @@ const Login = () => {
       <div className="min-h-screen bg-white flex flex-col">
         <button
           className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
-          onClick={handleClose} // replace this with your actual handler
+          onClick={handleClose} 
         >
           &times;
         </button>
@@ -370,7 +369,7 @@ const Login = () => {
             </div>
           </div>
         </div>
-        {/* <Footer /> */} {/* Uncomment this when you have the Footer component */}
+      
       </div>
     );
   }
@@ -382,7 +381,7 @@ const Login = () => {
       <div className="min-h-screen bg-white flex flex-col">
         <button
           className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
-          onClick={handleClose} // replace this with your actual handler
+          onClick={handleClose}
         >
           &times;
         </button>
@@ -485,7 +484,7 @@ const Login = () => {
             </div>
           </div>
         </div>
-        {/* <Footer /> */} {/* Uncomment this when you have the Footer component */}
+       
       </div>
     );
   }
@@ -496,7 +495,7 @@ const Login = () => {
       <div className="min-h-screen bg-white flex flex-col">
         <button
           className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
-          onClick={handleClose} // replace this with your actual handler
+          onClick={handleClose} 
         >
           &times;
         </button>
@@ -625,7 +624,7 @@ const Login = () => {
             </div>
           </div>
         </div>
-        {/* <Footer /> */} {/* Uncomment this when you have the Footer component */}
+      
       </div>
     );
   }

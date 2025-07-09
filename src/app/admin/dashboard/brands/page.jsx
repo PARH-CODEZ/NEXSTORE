@@ -28,21 +28,19 @@ const BrandPage = () => {
     }, []);
 
 
-
-
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this brand?')) return;
-    try {
-      setDeletingId(id);
-      const res = await fetch(`/api/brand?id=${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete brand');
-      setBrands((prev) => prev.filter((b) => b.id !== id));
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setDeletingId(null);
-    }
-  };
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this brand?')) return;
+        try {
+            setDeletingId(id);
+            const res = await fetch(`/api/brand?id=${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete brand');
+            setBrands((prev) => prev.filter((b) => b.id !== id));
+        } catch (err) {
+            toast.error(err.message);
+        } finally {
+            setDeletingId(null);
+        }
+    };
     if (loading) return <FullScreenLoader />;
 
     return (

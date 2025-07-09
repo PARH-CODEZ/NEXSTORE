@@ -11,6 +11,7 @@ import { Edit, Plus, Trash2, MapPin, Home } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Briefcase, BadgeIndianRupee } from 'lucide-react';
 
+
 export default function EcommerceProfile() {
 
   const user = useSelector(state => state.user.user);
@@ -155,10 +156,10 @@ export default function EcommerceProfile() {
           addressLine2: addressForm.AddressLine2,
           city: addressForm.City,
           state: addressForm.State,
-          zipCode: addressForm.PostalCode,    // note the API expects zipCode
+          zipCode: addressForm.PostalCode,    
           country: addressForm.Country,
           isDefault: addressForm.IsDefault,
-          // optionally AddressType if your API supports it
+         
         }),
       });
 
@@ -225,8 +226,7 @@ export default function EcommerceProfile() {
         if (!res.ok) throw new Error('Failed to fetch profile');
         const data = await res.json();
 
-        console.log('Profile data from backend:', data); // Check this in console
-
+        console.log('Profile data from backend:', data); 
         if (data.error) {
           console.error('Fetch error:', err);
         } else {
@@ -292,12 +292,6 @@ export default function EcommerceProfile() {
                 setEditingField={setEditingField}
               />
 
-
-
-
-
-
-
               {/* Email Field */}
               <ProfileField
                 label="EMAIL"
@@ -341,8 +335,6 @@ export default function EcommerceProfile() {
                   />
                 </>
               )}
-
-
 
               {/* Addresses Section */}
 
@@ -479,8 +471,6 @@ export default function EcommerceProfile() {
                   </div>
                 </div>
               )}
-
-
 
               {/* Address List */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

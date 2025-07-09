@@ -6,22 +6,29 @@ import { useRouter } from 'next/navigation';
 const CategoryNav = () => {
   const router = useRouter();
 
-  const categories = [
-    { CategoryID: 1, CategoryName: 'Electronics', Slug: 'electronics' },
-    { CategoryID: 2, CategoryName: 'Fashion', Slug: 'fashion' },
-    { CategoryID: 3, CategoryName: 'Home & Garden', Slug: 'home-garden' },
-    { CategoryID: 4, CategoryName: 'Sports', Slug: 'sports' },
-    { CategoryID: 5, CategoryName: 'Toys', Slug: 'toys' },
-    { CategoryID: 6, CategoryName: 'Books', Slug: 'books' },
-    { CategoryID: 7, CategoryName: 'Health', Slug: 'health' },
-    { CategoryID: 8, CategoryName: 'Automotive', Slug: 'automotive' },
-    { CategoryID: 9, CategoryName: 'Beauty', Slug: 'beauty' },
-    { CategoryID: 10, CategoryName: 'Groceries', Slug: 'groceries' },
-    { CategoryID: 11, CategoryName: 'Music', Slug: 'music' },
-    { CategoryID: 12, CategoryName: 'Office Supplies', Slug: 'office-supplies' },
-    { CategoryID: 13, CategoryName: 'Pet Supplies', Slug: 'pet-supplies' },
-    { CategoryID: 14, CategoryName: 'Baby Products', Slug: 'baby-products' },
-  ];
+const categories = [
+  { CategoryID: 1001, CategoryName: 'Mobiles', Slug: 'mobiles' },
+  { CategoryID: 1002, CategoryName: 'Smart Watches', Slug: 'smart-watches' },
+  { CategoryID: 1003, CategoryName: 'Laptops', Slug: 'laptops' },
+  { CategoryID: 1004, CategoryName: 'Appliances', Slug: 'appliances' },
+  { CategoryID: 1005, CategoryName: 'Gaming', Slug: 'gaming' },
+  { CategoryID: 1006, CategoryName: 'Furniture', Slug: 'furniture' },
+  { CategoryID: 1, CategoryName: 'Electronics', Slug: 'electronics' },
+  { CategoryID: 2, CategoryName: 'Fashion', Slug: 'fashion' },
+  { CategoryID: 3, CategoryName: 'Home & Garden', Slug: 'home-garden' },
+  { CategoryID: 4, CategoryName: 'Sports', Slug: 'sports' },
+  { CategoryID: 5, CategoryName: 'Toys', Slug: 'toys' },
+  { CategoryID: 6, CategoryName: 'Books', Slug: 'books' },
+  { CategoryID: 7, CategoryName: 'Health', Slug: 'health' },
+  { CategoryID: 8, CategoryName: 'Automotive', Slug: 'automotive' },
+  { CategoryID: 9, CategoryName: 'Beauty', Slug: 'beauty' },
+  { CategoryID: 10, CategoryName: 'Groceries', Slug: 'groceries' },
+  { CategoryID: 11, CategoryName: 'Music', Slug: 'music' },
+  { CategoryID: 12, CategoryName: 'Office Supplies', Slug: 'office-supplies' },
+  { CategoryID: 13, CategoryName: 'Pet Supplies', Slug: 'pet-supplies' },
+  { CategoryID: 14, CategoryName: 'Baby Products', Slug: 'baby-products' },
+];
+
 
   const handleClick = (slug) => {
     router.push(`/category/${slug}`);

@@ -12,6 +12,7 @@ export async function GET(req) {
   const keywordToSearch = rawTerm.includes('washing machine') ? 'washing machine' : rawTerm;
 
   try {
+    //  Fetch matching categories
     const categories = await prisma.Categories.findMany({
       where: {
         OR: [
@@ -39,6 +40,7 @@ export async function GET(req) {
 
     const categoryIds = categories.map(cat => cat.CategoryID);
 
+    //  Fetch matching products
     const products = await prisma.product.findMany({
       where: {
         OR: [
@@ -61,6 +63,7 @@ export async function GET(req) {
         category: {
           select: {
             CategoryName: true,
+            Slug: true, 
           },
         },
       },
@@ -77,10 +80,13 @@ export async function GET(req) {
         id: p.id,
         name: p.name,
         categoryName: p.category?.CategoryName || 'Unknown',
-      })),
+        categorySlug: p.category?.Slug || '', // 👈 ADD THIS
+      }))
+
     });
+
   } catch (error) {
-    console.error('Search API error:', error);
+    console.error('❌ Search API error:', error);
     return NextResponse.json({ categories: [], products: [] }, { status: 500 });
   }
 }

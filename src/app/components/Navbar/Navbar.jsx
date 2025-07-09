@@ -68,7 +68,7 @@ const Navbar = ({ notFixed = false }) => {
 
     const handleClick = () => {
         if (user?.role === 'seller') {
-            router.push('/product');
+            router.push('/catlogue');
         } else {
             router.push('/orders');
         }
@@ -376,7 +376,7 @@ function truncateName(name, maxLength = 10) {
                             <div
                                 className="hidden md:block md:relative flex flex-col px-2 py-1 hover:bg-gray-800 rounded cursor-pointer text-sm leading-tight"
                                 onMouseEnter={openModal}
-                                onMouseLeave={scheduleClose}
+                              
                             >
 
                                 {/* Desktop: HELLO, {name} */}
