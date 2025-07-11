@@ -5,16 +5,11 @@ import FullScreenLoader from '../FullScreenLoader/FullScreenLoader';
 import MobileSidebar from '../MobileSidebar/MobileSidebar';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import {
-    Search,
-    MapPin,
-    ShoppingCart,
-    Globe,
-    User,
-    ChevronDown
-} from 'lucide-react';
+import { Search,MapPin, ShoppingCart, Globe, User} from 'lucide-react';
 import AccountModal from '../AccountModal/AccountModal';
 import Link from 'next/link';
+
+
 
 const Navbar = ({ notFixed = false }) => {
 
@@ -109,18 +104,18 @@ const Navbar = ({ notFixed = false }) => {
     const [showResults, setShowResults] = useState(false);
     const resultsRef = useRef(null);
 
-function truncateName(name, maxLength = 10) {
-  if (name.length <= maxLength) return name;
-  const words = name.split(' ');
-  let result = '';
+    function truncateName(name, maxLength = 10) {
+        if (name.length <= maxLength) return name;
+        const words = name.split(' ');
+        let result = '';
 
-  for (let word of words) {
-    if ((result + word).length + 1 > maxLength) break;
-    result += word + ' ';
-  }
+        for (let word of words) {
+            if ((result + word).length + 1 > maxLength) break;
+            result += word + ' ';
+        }
 
-  return result.trim() + '...';
-}
+        return result.trim() + '...';
+    }
 
 
     useEffect(() => {
@@ -166,30 +161,6 @@ function truncateName(name, maxLength = 10) {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /* ── render ─────────────────────────────────── */
     return (
         <div className={`bg-[#0D0D0D] text-white z-50  p-[10px] pt-[25px] md:py-4 ${notFixed ? '' : 'sticky top-0'}`}>
@@ -230,21 +201,9 @@ function truncateName(name, maxLength = 10) {
                         </Link>
 
 
-
                         <div className="flex px-2 py-1 text-sm gap-3 font-semibold  border-gray-700 md:hidden mt-[10px]">
 
                         </div>
-
-
-
-
-
-
-
-
-
-
-
 
                         {/* Search */}
                         <div className="relative w-[100%] mt-[15px] md:mt-0">
@@ -350,20 +309,6 @@ function truncateName(name, maxLength = 10) {
                         </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                         {/* Right‑hand actions */}
                         <div className="flex justify-end space-x-2 md: space-x items-center select-none mt-[-35px] md:mt-0">
                             {/* Language */}
@@ -376,7 +321,7 @@ function truncateName(name, maxLength = 10) {
                             <div
                                 className="hidden md:block md:relative flex flex-col px-2 py-1 hover:bg-gray-800 rounded cursor-pointer text-sm leading-tight"
                                 onMouseEnter={openModal}
-                              
+
                             >
 
                                 {/* Desktop: HELLO, {name} */}

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req, { params }) {
   try {
-    const { slug } = await params;
+    const { slug } = params;
     const body = await req.json();
 
     const {
@@ -18,7 +18,6 @@ export async function POST(req, { params }) {
     const pageSize = 12;
     const parsedFilters = Array.isArray(filters) ? filters : [];
 
-
     const category = await prisma.categories.findFirst({
       where: { Slug: slug.toLowerCase() },
     });
@@ -27,7 +26,6 @@ export async function POST(req, { params }) {
       return NextResponse.json({ message: 'Category not found' }, { status: 404 });
     }
 
-    //  Get max price in this category
     const maxPriceInCategory = await prisma.product.aggregate({
       where: {
         categoryId: category.CategoryID,
@@ -43,7 +41,6 @@ export async function POST(req, { params }) {
       ? Number(maxPriceInCategory._max.price) + 10000
       : 1000000;
 
-    // Get matched brands
     const brandFilters = await prisma.brand.findMany({
       where: {
         name: { in: parsedFilters },
@@ -54,7 +51,6 @@ export async function POST(req, { params }) {
     const matchedBrandNames = brandFilters.map(b => b.name);
     const nonBrandFilters = parsedFilters.filter(f => !matchedBrandNames.includes(f));
 
-    //  Build base where clause
     const baseWhere = {
       categoryId: category.CategoryID,
       isActive: true,
@@ -65,14 +61,12 @@ export async function POST(req, { params }) {
       },
     };
 
-    // Add brand filter only if matches found
     if (matchedBrandNames.length > 0) {
       baseWhere.brand = {
         name: { in: matchedBrandNames },
       };
     }
 
-    // ✅ Add non-brand filters only if they match specs/variant values
     const applyNonBrandFilters = nonBrandFilters.length > 0;
 
     const productWhere = {
@@ -103,7 +97,6 @@ export async function POST(req, { params }) {
       }),
     };
 
-    // Total product count (exclude highlighted)
     const totalProducts = await prisma.product.count({
       where: {
         ...productWhere,
@@ -113,7 +106,6 @@ export async function POST(req, { params }) {
       },
     });
 
-    //  Fetch regular products
     const regularProducts = await prisma.product.findMany({
       where: {
         ...productWhere,
@@ -127,7 +119,7 @@ export async function POST(req, { params }) {
         price: true,
         discountPercent: true,
         images: {
-          take: 1, // only send the first image
+          take: 1,
           select: { imageUrl: true },
         },
         category: { select: { Slug: true } },
@@ -141,9 +133,7 @@ export async function POST(req, { params }) {
           select: {
             images: {
               take: 1,
-              select: {
-                imageUrl: true, // or use the correct field name like `url` if it's different
-              },
+              select: { imageUrl: true },
             },
           },
         },
@@ -152,7 +142,6 @@ export async function POST(req, { params }) {
             reviews: true,
             variants: true,
           },
-
         },
       },
       skip: (page - 1) * pageSize,
@@ -161,11 +150,10 @@ export async function POST(req, { params }) {
         sort === 'PriceLowToHigh'
           ? { price: 'asc' }
           : sort === 'PriceHighToLow'
-            ? { price: 'desc' }
-            : { createdAt: 'desc' },
+          ? { price: 'desc' }
+          : { createdAt: 'desc' },
     });
 
-    // ✅ Fetch highlighted product (if needed)
     let highlightedProduct = null;
     if (highlightProductId) {
       highlightedProduct = await prisma.product.findUnique({
@@ -176,7 +164,7 @@ export async function POST(req, { params }) {
           price: true,
           discountPercent: true,
           images: {
-            take: 1, // only send the first image
+            take: 1,
             select: { imageUrl: true },
           },
           category: { select: { Slug: true } },
@@ -190,9 +178,7 @@ export async function POST(req, { params }) {
             select: {
               images: {
                 take: 1,
-                select: {
-                  imageUrl: true, // or use the correct field name like `url` if it's different
-                },
+                select: { imageUrl: true },
               },
             },
           },
@@ -200,9 +186,7 @@ export async function POST(req, { params }) {
             select: {
               reviews: true,
               variants: true,
-
             },
-
           },
         },
       });
@@ -212,7 +196,6 @@ export async function POST(req, { params }) {
       ? [highlightedProduct, ...regularProducts]
       : regularProducts;
 
-    // ✅ Brands under category
     const brands = await prisma.brand.findMany({
       where: {
         products: {
@@ -227,14 +210,12 @@ export async function POST(req, { params }) {
       distinct: ['name'],
     });
 
-    // ✅ Specifications under category
     const specResults = await prisma.productSpecification.findMany({
       where: {
         product: {
           categoryId: category.CategoryID,
           isActive: true,
           isApproved: true,
-
         },
       },
       select: { label: true, value: true },
@@ -252,8 +233,7 @@ export async function POST(req, { params }) {
       Array.from(values),
     ]);
 
-    // ✅ Variant Attributes
-    const attrValues = await prisma.variantAttributeValue.findMany({
+    const attrRows = await prisma.variantAttributeValue.findMany({
       where: {
         mappings: {
           some: {
@@ -273,15 +253,23 @@ export async function POST(req, { params }) {
       },
     });
 
-    const attrMap = {};
-    for (const { value, attribute } of attrValues) {
-      if (!attrMap[attribute.name]) attrMap[attribute.name] = new Set();
-      attrMap[attribute.name].add(value);
+    const dedup = new Map();
+
+    for (const { value, attribute } of attrRows) {
+      const attrName = attribute.name.trim().toLowerCase();
+      const valNormalized = value.replace(/\s+/g, '').toLowerCase();
+
+      if (!dedup.has(attrName)) dedup.set(attrName, new Map());
+
+      const existing = dedup.get(attrName);
+      if (!existing.has(valNormalized)) {
+        existing.set(valNormalized, value);
+      }
     }
 
-    const attributeFilters = Object.entries(attrMap).map(([name, values]) => ({
+    const attributes = Array.from(dedup, ([name, set]) => ({
       name,
-      values: Array.from(values),
+      values: Array.from(set.values()),
     }));
 
     return NextResponse.json({
@@ -289,10 +277,9 @@ export async function POST(req, { params }) {
       products,
       brands,
       specifications,
-      attributes: attributeFilters,
+      attributes,
       maxPrice: maxPriceLimit,
     });
-
   } catch (error) {
     console.error('❌ Error:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
