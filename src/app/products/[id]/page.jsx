@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useActionState } from 'react';
-import { Star, Share, Heart, ShoppingCart, Truck, Shield, Award, RotateCcw, Zap, ChevronRight } from 'lucide-react';
+import { Star, Share, Truck, Shield, Award, RotateCcw, Zap, Trash2 } from 'lucide-react';
 import Navbar from '@/app/components/Navbar/Navbar';
 import CategoryNav from '@/app/components/Categories/Categories';
 import BrandSection from '@/app/components/BrandProductScroll/BrandProductScroll';
@@ -8,9 +8,14 @@ import Footer from '@/app/components/Footer/Footer';
 import { useParams } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
+import ReviewModal from '@/app/components/ReviewModal/ReviewModal';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
+
 
 const Productpage = () => {
 
+  const router = useRouter()
 
   const user = useSelector((state) => state.user.user);
 
@@ -38,6 +43,43 @@ const Productpage = () => {
   const [primaryAttribute, setPrimaryAttribute] = useState(null);
   const [selectedPrimaryValue, setSelectedPrimaryValue] = useState(null);
 
+  const [isOpen, setIsOpen] = useState(false)
+  const [reviewAdded, setReviewAdded] = useState(false);
+
+  const handleReviewAdded = () => {
+    setReviewAdded(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!id) {
+      return
+    }
+    console.log(id)
+    const res = await fetch('/api/reviews', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reviewId: id }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete review');
+
+    setReviewAdded(true)
+  }
+
+  const handleReviewModal = () => {
+    if (!user) {
+      router.push("/login")
+    }
+    else {
+      setIsOpen(true)
+    }
+  }
+  const onClose = () => {
+    setIsOpen(false);
+  };
+
+
   // 🔧 Normalize helper
   const normalize = str => str?.toLowerCase().replace(/\s+/g, '');
 
@@ -50,10 +92,9 @@ const Productpage = () => {
         const productData = await productRes.json();
 
         if (!productRes.ok) throw new Error(productData.error || 'Failed to fetch product');
-
+        console.log(productData)
         const product = productData.product;
         const allVariants = product?.variants || [];
-        console.log(productData.relatedProducts)
         setProduct(product);
         SetVariants(allVariants);
         setBrand(productData.brand);
@@ -142,7 +183,7 @@ const Productpage = () => {
     if (id) {
       fetchData();
     }
-  }, [id, user]);
+  }, [id, user, reviewAdded]);
 
   // ✅ Filtered Variants
   const filteredVariants = primaryAttribute
@@ -663,9 +704,9 @@ const Productpage = () => {
                         FREE delivery {deliveryStartFormatted} - {deliveryEndFormatted}
                       </div>
 
-                      <div className="flex items-center text-sm">
+                      <div className="flex items-center text-sm gap-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                        <span className="text-gray-700">Delivering to {(defaultPostalCode, defaultCity) || '400001 Mumbai'}</span>
+                        <span className="text-gray-700 uppercase">Delivering to {(defaultPostalCode, defaultCity) || '400001 Mumbai'}</span>
                         <span className="text-blue-600 hover:underline cursor-pointer uppercase">Update location</span>
                       </div>
                     </div>
@@ -793,7 +834,7 @@ const Productpage = () => {
                     <p className="text-xs text-gray-600 mb-2">
                       Share your thoughts with other customers
                     </p>
-                    <button className="border border-gray-400 rounded-full px-4 py-1 text-sm font-medium hover:bg-gray-100 transition uppercase">
+                    <button onClick={handleReviewModal} className="border border-gray-400 rounded-full px-4 py-1 text-sm font-medium hover:bg-gray-100 transition uppercase">
                       Write a product review
                     </button>
                   </div>
@@ -806,8 +847,18 @@ const Productpage = () => {
                     {reviews.map((review, index) => (
                       <div
                         key={index}
-                        className="w-full border border-gray-200 rounded-lg p-4 bg-gray-50 shadow-sm"
+                        className="w-full border border-gray-200 rounded-lg p-4 bg-gray-50 shadow-sm relative"
                       >
+                        {/* Show delete icon if it's the current user's review */}
+                        {user?.id === review.userId && (
+                          <button
+                            onClick={() => handleDelete(review.id)}
+                            className="absolute top-2 right-2 text-red-600 hover:text-red-600 cursor-pointer"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+
                         <div className="flex items-center mb-2">
                           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3 text-white font-semibold">
                             {review.user?.FullName?.charAt(0).toUpperCase()}
@@ -832,6 +883,7 @@ const Productpage = () => {
                         <div className="text-sm text-gray-800 leading-relaxed">{review.review}</div>
                       </div>
                     ))}
+
                   </div>
                 </div>
               </div>
@@ -839,6 +891,8 @@ const Productpage = () => {
               {/* Bottom CTA for smaller screens */}
 
             </div>
+
+            <ReviewModal isOpen={isOpen} onClose={onClose} productId={id} userId={user?.id} onReviewAdded={handleReviewAdded} />
             <Footer />
 
 
