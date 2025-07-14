@@ -52,7 +52,7 @@ const Productpage = () => {
 
         const product = productData.product;
         const allVariants = product?.variants || [];
-
+        console.log(productData.relatedProducts)
         setProduct(product);
         SetVariants(allVariants);
         setBrand(productData.brand);
@@ -66,7 +66,7 @@ const Productpage = () => {
         if (productData?.variantData?.attributeValues?.length > 0) {
           setSelectedPrimaryValue(productData.variantData.attributeValues[0]);
         }
-        // 🧠 Build attribute map
+       
         const attrMap = {};
 
         allVariants.forEach(variant => {
@@ -324,7 +324,7 @@ const Productpage = () => {
 
                     {/* Offers Section */}
                     <div className="rounded-lg">
-                      {/* Title Section */}
+                      {/* Title */}
                       <div className="flex items-center space-x-2 mb-4">
                         <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                           <span className="text-white text-xs font-bold">%</span>
@@ -332,54 +332,47 @@ const Productpage = () => {
                         <h2 className="text-lg font-semibold text-gray-900 uppercase">Offers</h2>
                       </div>
 
-                      {/* Individual Offer Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                        {/* Offer Card 1 */}
-                        <div className="border border-gray-200 rounded-md p-3 bg-white shadow-sm flex flex-col justify-between h-30">
-                          <div>
-                            <div className="font-semibold text-sm mb-1 uppercase">No Cost EMI</div>
-                            <div className="text-xs text-gray-600">
-                              Upto ₹7,700.07 EMI interest savings on select Credit Cards
+                      {/* Horizontally Scrollable Offer Cards */}
+                      <div className="flex overflow-x-auto space-x-3 pb-2 faint-scrollbar">
+                        {[
+                          {
+                            title: "No Cost EMI",
+                            description: "Upto ₹7,700.07 EMI interest savings on select Credit Cards",
+                            offers: "1 offer ›"
+                          },
+                          {
+                            title: "Bank Offer",
+                            description: "Upto ₹3,000.00 discount on select Credit Cards",
+                            offers: "5 offers ›"
+                          },
+                          {
+                            title: "Cashback",
+                            description: "Upto ₹5,127.00 cashback as Amazon Pay Balance when you pay...",
+                            offers: "1 offer ›"
+                          }
+                        ].map((offer, index) => (
+                          <div
+                            key={index}
+                            className="max-w-[180px] border border-gray-200 rounded-md bg-white shadow-sm flex flex-col justify-between p-3"
+                          >
+                            <div>
+                              <div className="font-semibold text-sm mb-1 uppercase truncate">{offer.title}</div>
+                              <div className="text-xs text-gray-600 truncate">{offer.description}</div>
+                            </div>
+                            <div className="text-xs text-blue-600 hover:underline cursor-pointer mt-2 uppercase truncate">
+                              {offer.offers}
                             </div>
                           </div>
-                          <div className="text-xs text-blue-600 hover:underline cursor-pointer mt-2 uppercase">
-                            1 offer ›
-                          </div>
-                        </div>
-
-                        {/* Offer Card 2 */}
-                        <div className="border border-gray-200 rounded-md p-3 bg-white shadow-sm flex flex-col justify-between h-30">
-                          <div>
-                            <div className="font-semibold text-sm mb-1 uppercase">Bank Offer</div>
-                            <div className="text-xs text-gray-600">
-                              Upto ₹3,000.00 discount on select Credit Cards
-                            </div>
-                          </div>
-                          <div className="text-xs text-blue-600 hover:underline cursor-pointer mt-2 uppercase">
-                            5 offers ›
-                          </div>
-                        </div>
-
-                        {/* Offer Card 3 */}
-                        <div className="border border-gray-200 rounded-md p-3 bg-white shadow-sm flex flex-col justify-between h-30">
-                          <div>
-                            <div className="font-semibold text-sm mb-1 uppercase">Cashback</div>
-                            <div className="text-xs text-gray-600">
-                              Upto ₹5,127.00 cashback as Amazon Pay Balance when you pay...
-                            </div>
-                          </div>
-                          <div className="text-xs text-blue-600 hover:underline cursor-pointer mt-2 uppercase">
-                            1 offer ›
-                          </div>
-                        </div>
+                        ))}
                       </div>
+
                     </div>
 
 
 
-                    {/* Service Icons */}
-                    <div className="flex items-start justify-between gap-2 px-2 py-3 bg-white text-sm border-b border-gray-400">
-                      {/* Feature Box Template */}
+
+                    {/* SERVICE ICONS */}
+                    <div className="flex items-start justify-between gap-2 px-2 py-3 bg-white text-sm border-b border-gray-400 overflow-x-auto">
                       {[
                         { icon: <RotateCcw className="h-5 w-5 text-yellow-500" />, label: '10 days Service Centre Replacement' },
                         { icon: <Truck className="h-5 w-5 text-yellow-500" />, label: 'Free Delivery' },
@@ -391,17 +384,18 @@ const Productpage = () => {
                           <div className="w-12 h-12 border border-black rounded-full flex items-center justify-center mb-1">
                             {item.icon}
                           </div>
-                          <span className="text-[10px] text-blue-700 leading-tight">
+                          <span className="text-[10px] text-blue-700 leading-tight truncate text-ellipsis overflow-hidden w-full">
                             {item.label}
                           </span>
                         </div>
                       ))}
 
                       {/* Chevron */}
-                      <div className="flex items-center justify-center">
+                      <div className="flex items-center justify-center min-w-[24px]">
                         <ChevronRight className="h-4 w-4 text-gray-400" />
                       </div>
                     </div>
+
 
 
 
@@ -612,7 +606,7 @@ const Productpage = () => {
 
 
           </div>
-          <div className="w-[85%] xl:mx-auto px-4 py-6">
+          <div className="xl:w-[85%] xl:mx-auto px-4 py-6">
             <div className="flex flex-col">
               {images?.map((image, index) => (
                 <img

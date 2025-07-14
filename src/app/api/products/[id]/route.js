@@ -54,12 +54,13 @@ export async function GET(req, context) {
         brandId: product.brandId,
         isActive: true,
         isApproved: true,
-        NOT: { id: productId }
+        NOT: { id: productId },
       },
       take: 10,
-      include: {
-        displayImages: true
-      }
+      select: {
+        id:true,
+        title: true,   // or `name` if that’s the column
+      },
     });
 
     // ───────────────────────────────

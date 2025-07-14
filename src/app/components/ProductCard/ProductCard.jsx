@@ -64,8 +64,6 @@ const ProductCard = ({ products = [] }) => {
   };
 
 
-
-
   const getAverageRating = (reviews = []) => {
     if (reviews.length === 0) return 0;
     const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
@@ -79,10 +77,10 @@ const ProductCard = ({ products = [] }) => {
         const reviewCount = product._count?.reviews || 0;
 
         return (
-          <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden "
+          <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden w-full"
            onClick={() => router.push(`/products/${product.id}`)}>
             {/* Desktop Layout */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <div className="p-4">
                 <div className="flex items-center mb-3">
                   <span className="text-xs text-gray-500 mr-2">Sponsored</span>
@@ -157,7 +155,7 @@ const ProductCard = ({ products = [] }) => {
                       Service: Installation
                     </div>
 
-                    <button className="bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-2 text-sm font-medium mb-3 uppercase">
+                    <button className="bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-2 text-sm font-medium mb-3 uppercase ">
                       Add to cart
                     </button>
 
@@ -173,7 +171,7 @@ const ProductCard = ({ products = [] }) => {
             </div>
 
             {/* Mobile Layout */}
-            <div className="block md:hidden">
+            <div className="block lg:hidden">
               <div className="p-3">
                 <div className="flex items-center mb-2">
                   <span className="text-xs text-gray-500">Sponsored</span>
@@ -241,8 +239,8 @@ const ProductCard = ({ products = [] }) => {
                   </div>
                 </div>
 
-                <div className="mt-3">
-                  <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 text-sm font-medium uppercase rounded-sm">
+                <div className="mt-3 justify-center items-center flex">
+                  <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 text-sm font-medium uppercase rounded-sm md:w-[80%] ">
                     Add to cart
                   </button>
                 </div>
@@ -258,7 +256,7 @@ const ProductCard = ({ products = [] }) => {
 // ✅ ProductGrid wrapper - receives products from parent
 const ProductGrid = ({ products = [] }) => {
   return (
-    <div className="md:w-[80%] md:p-4">
+    <div className="xl:w-[80%] md:p-4">
       <ProductCard products={products} />
     </div>
   );

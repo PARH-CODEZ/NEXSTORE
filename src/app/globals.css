@@ -4,3 +4,21 @@
 .no-scroll {
   overflow: hidden;
 }
+/* Faint visible scrollbar */
+.faint-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(24, 24, 24, 0.1) transparent;
+}
+
+.faint-scrollbar::-webkit-scrollbar {
+  height: 2px;
+}
+
+.faint-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.faint-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1); /* Light gray thumb */
+  border-radius: 4px;
+}
