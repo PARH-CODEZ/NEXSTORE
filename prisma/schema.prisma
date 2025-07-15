@@ -8,19 +8,17 @@ datasource db {
 }
 
 model User {
-  UserID       Int      @id @default(autoincrement())
-  FullName     String
-  Email        String   @unique
-  PasswordHash String
-  PhoneNumber  String?
-  Role         String
-  IsActive     Boolean  @default(true)
-  CreatedAt    DateTime @default(now())
-
-  ordersAsCustomer Order[] @relation("CustomerOrders")
-  ordersAsSeller   Order[] @relation("SellerOrders")
-
-  reviews ProductReview[]
+  UserID           Int             @id @default(autoincrement())
+  FullName         String
+  Email            String          @unique
+  PasswordHash     String
+  PhoneNumber      String?
+  Role             String
+  IsActive         Boolean         @default(true)
+  CreatedAt        DateTime        @default(now())
+  ordersAsSeller   Order[]         @relation("SellerOrders")
+  ordersAsCustomer Order[]         @relation("CustomerOrders")
+  reviews          ProductReview[]
 }
 
 model UserAddress {
@@ -50,50 +48,47 @@ model SellerProfile {
 }
 
 model Categories {
-  CategoryID      Int      @id @default(autoincrement())
+  CategoryID      Int       @id @default(autoincrement())
   CategoryName    String
   Description     String?
   Slug            String?
   DisplayImageURL String?
-  CreatedAt       DateTime @default(now())
-  UpdatedAt       DateTime @updatedAt
-
-  products Product[] @relation("CategoryProducts")
+  CreatedAt       DateTime  @default(now())
+  UpdatedAt       DateTime  @updatedAt
+  products        Product[] @relation("CategoryProducts")
 }
 
 model Brand {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  imageUrl  String   @db.VarChar(255)
-  createdAt DateTime @default(now())
-
-  products Product[] @relation("BrandProducts")
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  imageUrl  String    @db.VarChar(255)
+  createdAt DateTime  @default(now())
+  products  Product[] @relation("BrandProducts")
 }
 
 model Product {
-  id              Int      @id @default(autoincrement())
+  id              Int                    @id @default(autoincrement())
   categoryId      Int
   brandId         Int?
-  sellerId        Int
   title           String
   name            String
   slug            String
   description     String?
-  price           Decimal  @db.Decimal(18, 2)
-  discountPercent Decimal  @default(0) @db.Decimal(5, 2)
-  isActive        Boolean  @default(true)
-  isApproved      Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  category Categories @relation(fields: [categoryId], references: [CategoryID], name: "CategoryProducts")
-  brand    Brand?     @relation(fields: [brandId], references: [id], name: "BrandProducts")
-
-  images         ProductImage[]
-  displayImages  ProductDisplayImage[]
-  variants       ProductVariant[]
-  specifications ProductSpecification[]
-  reviews        ProductReview[]
+  price           Decimal                @db.Decimal(18, 2)
+  discountPercent Decimal                @default(0) @db.Decimal(5, 2)
+  isActive        Boolean                @default(true)
+  isApproved      Boolean                @default(false)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  sellerId        Int
+  stockAvailable  Boolean?               @default(true)
+  brand           Brand?                 @relation("BrandProducts", fields: [brandId], references: [id])
+  category        Categories             @relation("CategoryProducts", fields: [categoryId], references: [CategoryID])
+  displayImages   ProductDisplayImage[]
+  images          ProductImage[]
+  reviews         ProductReview[]
+  specifications  ProductSpecification[]
+  variants        ProductVariant[]
 }
 
 model ProductDisplayImage {
@@ -101,40 +96,37 @@ model ProductDisplayImage {
   productId Int
   imageUrl  String  @db.VarChar(255)
   isPrimary Boolean @default(false)
-
-  product Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 
   @@index([productId])
 }
 
 model ProductImage {
-  id        Int     @id @default(autoincrement())
+  id        Int             @id @default(autoincrement())
   productId Int?
   variantId Int?
-  imageUrl  String  @db.VarChar(255)
-  isPrimary Boolean @default(false)
-
-  product Product?        @relation(fields: [productId], references: [id])
-  variant ProductVariant? @relation(fields: [variantId], references: [id], name: "VariantImages")
+  imageUrl  String          @db.VarChar(255)
+  isPrimary Boolean         @default(false)
+  product   Product?        @relation(fields: [productId], references: [id])
+  variant   ProductVariant? @relation("VariantImages", fields: [variantId], references: [id])
 
   @@index([productId])
   @@index([variantId])
 }
 
 model ProductVariant {
-  id                Int      @id @default(autoincrement())
+  id                Int                          @id @default(autoincrement())
   productId         Int
-  sku               String   @unique
-  variantName       String   @db.VarChar(150)
-  additionalPrice   Decimal  @default(0) @db.Decimal(18, 2)
-  quantityAvailable Int      @default(0)
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-
-  product          Product                      @relation(fields: [productId], references: [id])
-  attributeMapping ProductVariantAttributeMap[]
-  images           ProductImage[]               @relation("VariantImages")
-  OrderItem        OrderItem[]
+  sku               String                       @unique
+  variantName       String                       @db.VarChar(150)
+  additionalPrice   Decimal                      @default(0) @db.Decimal(18, 2)
+  quantityAvailable Int                          @default(0)
+  isActive          Boolean                      @default(true)
+  createdAt         DateTime                     @default(now())
+  OrderItem         OrderItem[]
+  images            ProductImage[]               @relation("VariantImages")
+  product           Product                      @relation(fields: [productId], references: [id])
+  attributeMapping  ProductVariantAttributeMap[]
 
   @@index([productId])
 }
@@ -146,33 +138,30 @@ model VariantAttribute {
 }
 
 model VariantAttributeValue {
-  id          Int    @id @default(autoincrement())
+  id          Int                          @id @default(autoincrement())
   attributeId Int
-  value       String @db.VarChar(50)
-
-  attribute VariantAttribute             @relation(fields: [attributeId], references: [id])
-  mappings  ProductVariantAttributeMap[]
+  value       String                       @db.VarChar(50)
+  mappings    ProductVariantAttributeMap[]
+  attribute   VariantAttribute             @relation(fields: [attributeId], references: [id])
 }
 
 model ProductVariantAttributeMap {
-  id        Int @id @default(autoincrement())
+  id        Int                   @id @default(autoincrement())
   variantId Int
   valueId   Int
-
-  variant ProductVariant        @relation(fields: [variantId], references: [id])
-  value   VariantAttributeValue @relation(fields: [valueId], references: [id])
+  value     VariantAttributeValue @relation(fields: [valueId], references: [id])
+  variant   ProductVariant        @relation(fields: [variantId], references: [id])
 
   @@index([variantId])
   @@index([valueId])
 }
 
 model ProductSpecification {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   productId Int
   label     String
   value     String
-
-  product Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 model ProductReview {
@@ -182,9 +171,8 @@ model ProductReview {
   rating    Int      @default(5)
   review    String?
   createdAt DateTime @default(now())
-
-  product Product @relation(fields: [productId], references: [id])
-  user    User    @relation(fields: [userId], references: [UserID])
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [UserID])
 }
 
 model OrderStatusHistory {
@@ -192,55 +180,48 @@ model OrderStatusHistory {
   orderId   Int
   status    OrderStatus
   note      String?
-  updatedBy Int? // Admin or system user ID
+  updatedBy Int?
   timestamp DateTime    @default(now())
-
-  order Order @relation(fields: [orderId], references: [id])
+  order     Order       @relation(fields: [orderId], references: [id])
 }
 
 model Order {
-  id                 Int       @id @default(autoincrement())
-  userId             Int
-  sellerId           Int?
-  shippingAddressId  Int
-  billingAddressId   Int
-  status             OrderStatus   @default(PENDING)
-  paymentStatus      PaymentStatus @default(PENDING)
-  paymentMethod      String?
-  shippingFee        Decimal       @default(0.00) @db.Decimal(10, 2)
-  subtotal           Decimal       @default(0.00) @db.Decimal(18, 2)
-  totalAmount        Decimal       @default(0.00) @db.Decimal(18, 2)
-  placedAt           DateTime      @default(now())
-  deliveredAt        DateTime?
-  cancelledAt        DateTime?
-  trackingNumber     String?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-
-  // Relations with unique names
-  shippingAddress OrderAddress @relation("ShippingAddressRelation", fields: [shippingAddressId], references: [id])
-  billingAddress  OrderAddress @relation("BillingAddressRelation", fields: [billingAddressId], references: [id])
-
-  customer User   @relation("CustomerOrders", fields: [userId], references: [UserID])
-  seller   User?  @relation("SellerOrders", fields: [sellerId], references: [UserID])
-
-  items     OrderItem[]
-  history   OrderStatusHistory[]
-  payments  Payment[]
-  shipments Shipment[]
+  id                Int                  @id @default(autoincrement())
+  userId            Int
+  sellerId          Int?
+  shippingAddressId Int
+  billingAddressId  Int
+  status            OrderStatus          @default(PENDING)
+  paymentStatus     PaymentStatus        @default(PENDING)
+  paymentMethod     String?
+  shippingFee       Decimal              @default(0.00) @db.Decimal(10, 2)
+  subtotal          Decimal              @default(0.00) @db.Decimal(18, 2)
+  totalAmount       Decimal              @default(0.00) @db.Decimal(18, 2)
+  placedAt          DateTime             @default(now())
+  deliveredAt       DateTime?
+  cancelledAt       DateTime?
+  trackingNumber    String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  billingAddress    OrderAddress         @relation("BillingAddressRelation", fields: [billingAddressId], references: [id])
+  seller            User?                @relation("SellerOrders", fields: [sellerId], references: [UserID])
+  shippingAddress   OrderAddress         @relation("ShippingAddressRelation", fields: [shippingAddressId], references: [id])
+  customer          User                 @relation("CustomerOrders", fields: [userId], references: [UserID])
+  items             OrderItem[]
+  history           OrderStatusHistory[]
+  payments          Payment[]
+  shipments         Shipment[]
 }
 
-
 model OrderItem {
-  id         Int     @id @default(autoincrement())
+  id         Int            @id @default(autoincrement())
   orderId    Int
   variantId  Int
   quantity   Int
-  price      Decimal @db.Decimal(18, 2) // price at purchase time
-  totalPrice Decimal @db.Decimal(18, 2)
-
-  order   Order          @relation(fields: [orderId], references: [id])
-  variant ProductVariant @relation(fields: [variantId], references: [id])
+  price      Decimal        @db.Decimal(18, 2)
+  totalPrice Decimal        @db.Decimal(18, 2)
+  order      Order          @relation(fields: [orderId], references: [id])
+  variant    ProductVariant @relation(fields: [variantId], references: [id])
 }
 
 model Shipment {
@@ -252,8 +233,7 @@ model Shipment {
   expectedAt     DateTime?
   deliveredAt    DateTime?
   status         ShipmentStatus @default(PENDING)
-
-  order Order @relation(fields: [orderId], references: [id])
+  order          Order          @relation(fields: [orderId], references: [id])
 }
 
 model Payment {
@@ -264,25 +244,22 @@ model Payment {
   method        String?
   transactionId String?
   paidAt        DateTime?
-
-  order Order @relation(fields: [orderId], references: [id])
+  order         Order         @relation(fields: [orderId], references: [id])
 }
 
 model OrderAddress {
-  id           Int     @id @default(autoincrement())
-  fullName     String
-  phoneNumber  String
-  addressLine1 String
-  addressLine2 String?
-  city         String
-  state        String
-  postalCode   String
-  country      String
-
-  shippingOrders Order[] @relation("ShippingAddressRelation")
+  id             Int     @id @default(autoincrement())
+  fullName       String
+  phoneNumber    String
+  addressLine1   String
+  addressLine2   String?
+  city           String
+  state          String
+  postalCode     String
+  country        String
   billingOrders  Order[] @relation("BillingAddressRelation")
+  shippingOrders Order[] @relation("ShippingAddressRelation")
 }
-
 
 enum OrderStatus {
   PENDING

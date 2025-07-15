@@ -10,10 +10,11 @@ import FullScreenLoader from '../components/FullScreenLoader/FullScreenLoader';
 import { Edit, Plus, Trash2, MapPin, Home } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Briefcase, BadgeIndianRupee } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 
 export default function EcommerceProfile() {
-
+  const router = useRouter
   const user = useSelector(state => state.user.user);
   const dispatch = useDispatch();
   const [businessName, setBusinessName] = useState('')
@@ -274,7 +275,7 @@ export default function EcommerceProfile() {
         <div className="max-w-5xl mx-auto p-6 min-h-screen overflow-x-hidden">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-8 border-b border-gray-200">
-              <h1 className="text-2xl font-semibold text-gray-900">LOGIN AND SECURITY {user?.role === "seller" ? "FOR BUISNESS ACCOUNT" : "FOR CUSTOMER ACCOUNT"}</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">LOGIN AND SECURITY {user?.role === "seller" ? "FOR BUISNESS " : "FOR CUSTOMER "}</h1>
             </div>
 
             <div className="p-6 space-y-6">

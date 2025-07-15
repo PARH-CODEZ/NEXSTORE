@@ -11,6 +11,7 @@ import Link from 'next/link';
 import ReviewModal from '@/app/components/ReviewModal/ReviewModal';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import ProductNotFound from '@/app/components/ProductNotFound/ProductNotFound';
 
 
 const Productpage = () => {
@@ -45,6 +46,7 @@ const Productpage = () => {
 
   const [isOpen, setIsOpen] = useState(false)
   const [reviewAdded, setReviewAdded] = useState(false);
+  const [notFound, setNotFound] = useState(false)
 
   const handleReviewAdded = () => {
     setReviewAdded(true);
@@ -54,7 +56,6 @@ const Productpage = () => {
     if (!id) {
       return
     }
-    console.log(id)
     const res = await fetch('/api/reviews', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -89,6 +90,10 @@ const Productpage = () => {
         setLoading(true);
 
         const productRes = await fetch(`/api/products/${id}`);
+        if (productRes.status === 404) {
+          setNotFound(true);
+          return;
+        }
         const productData = await productRes.json();
 
         if (!productRes.ok) throw new Error(productData.error || 'Failed to fetch product');
@@ -261,7 +266,12 @@ const Productpage = () => {
   const deliveryStartFormatted = deliveryStart.toLocaleDateString("en-IN", options);
   const deliveryEndFormatted = deliveryEnd.toLocaleDateString("en-IN", options);
 
-
+  if (notFound) return (
+    <>
+      <Navbar />
+      <CategoryNav />
+      <ProductNotFound />
+    </>)
   return (
     <>
       <div className='overflow-x-hidden'>
@@ -564,14 +574,17 @@ const Productpage = () => {
 
                         {/* Stock and Seller Info */}
                         <div className="mb-4 text-sm space-y-1">
-                          <div className="text-green-600 font-semibold text-base flex items-center gap-2">
-
-                            IN STOCK
+                          <div
+                            className={`font-semibold text-base flex items-center gap-2 ${product.stockAvailable ? 'text-green-600' : 'text-red-600'
+                              }`}
+                          >
+                            {product.stockAvailable ? 'IN STOCK' : 'CURRENTLY UNAVAILABLE'}
                           </div>
 
+
                           <div className="text-gray-700">SHIPS FROM <span className="font-medium">NEXSTORE</span></div>
-                          <div className="text-gray-700">Sold by <span className="font-medium">{seller || "SELLER"}</span></div>
-                          <div className="text-gray-700">Payment <span className="font-medium text-blue-600 uppercase">Secure transaction</span></div>
+                          <div className="text-gray-700">SOLD BY:<span className="font-medium">{seller || "SELLER"}</span></div>
+                          <div className="text-gray-700">PAYMENT<span className="font-medium text-blue-600 uppercase">Secure transaction</span></div>
                         </div>
 
                         {/* Protection Plan */}
@@ -594,23 +607,41 @@ const Productpage = () => {
 
                         {/* Action Buttons */}
                         <div className="space-y-3">
-                          <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-2 px-4 rounded-lg text-sm uppercase">
+                          <button
+                            className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase 
+                             ${!product.stockAvailable
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-yellow-400 hover:bg-yellow-500 text-black'}`}
+                            disabled={!product.stockAvailable}
+                          >
                             Add to Cart
                           </button>
-                          <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg text-sm uppercase">
+
+                          <button
+                            className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase 
+                            ${!product.stockAvailable
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
+                            disabled={!product.stockAvailable}
+                          >
                             Buy Now
                           </button>
+
                           <div className="flex items-center space-x-2">
                             <input
                               type="checkbox"
                               checked={giftOptions}
                               onChange={(e) => setGiftOptions(e.target.checked)}
                               className="w-4 h-4"
+                              disabled={!product.stockAvailable}
                             />
-                            <span className="text-sm">Add gift options</span>
+                            <span className={`text-sm ${!product.stockAvailable ? 'text-gray-400' : ''}`}>
+                              Add gift options
+                            </span>
                           </div>
-
                         </div>
+
+
                       </div>
 
 
@@ -661,7 +692,7 @@ const Productpage = () => {
 
                   </div>
 
-                  {/*Right hand ActionBar */}
+                  {/*Right hand ActionBar on Larger Screens */}
                   <div className="top-20 flex-col h-[700px] right-6 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 hidden md:block">
                     {/* Exchange Options */}
                     <div className="mb-4">
@@ -713,9 +744,11 @@ const Productpage = () => {
 
                     {/* Stock and Seller Info */}
                     <div className="mb-4 text-sm space-y-1">
-                      <div className="text-green-600 font-semibold text-base flex items-center gap-2">
-
-                        IN STOCK
+                      <div
+                        className={`font-semibold text-base flex items-center gap-2 ${product.stockAvailable ? 'text-green-600' : 'text-red-600'
+                          }`}
+                      >
+                        {product.stockAvailable ? 'IN STOCK' : 'CURRENTLY UNAVAILABLE'}
                       </div>
 
                       <div className="text-gray-700">SHIPS FROM <span className="font-medium">NEXSTORE</span></div>
@@ -743,23 +776,43 @@ const Productpage = () => {
 
                     {/* Action Buttons */}
                     <div className="space-y-3">
-                      <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-2 px-4 rounded-lg text-sm uppercase">
+                      {/* Add to Cart */}
+                      <button
+                        className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase
+      ${!product.stockAvailable
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-yellow-400 hover:bg-yellow-500 text-black'}`}
+                        disabled={!product.stockAvailable}
+                      >
                         Add to Cart
                       </button>
-                      <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg text-sm uppercase">
+
+                      {/* Buy Now */}
+                      <button
+                        className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase
+      ${!product.stockAvailable
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
+                        disabled={!product.stockAvailable}
+                      >
                         Buy Now
                       </button>
+
+                      {/* Gift options */}
                       <div className="flex items-center space-x-2">
                         <input
                           type="checkbox"
                           checked={giftOptions}
                           onChange={(e) => setGiftOptions(e.target.checked)}
                           className="w-4 h-4"
+                          disabled={!product.stockAvailable}
                         />
-                        <span className="text-sm">Add gift options</span>
+                        <span className={`text-sm ${!product.stockAvailable ? 'text-gray-400' : ''}`}>
+                          Add gift options
+                        </span>
                       </div>
-
                     </div>
+
                   </div>
 
 

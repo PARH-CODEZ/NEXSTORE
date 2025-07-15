@@ -7,10 +7,22 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const MobileSidebar = ({ isOpen, onClose }) => {
+  const router = useRouter()
   const user = useSelector((state) => state.user.user);
   const firstName = user?.name?.split(' ')[0];
+
+
+  const handleClick = () => {
+    if (user) {
+      router.push('/account');
+    } else {
+      router.push('/login');
+    }
+  };
+
 
   return (
     <>
@@ -45,15 +57,18 @@ const MobileSidebar = ({ isOpen, onClose }) => {
 
         {/* SWITCH ACCOUNTS */}
         <div className="mb-6 border-b border-gray-100">
-          <Link href={'/account'}>
-            <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group  border-gray-100">
-              <div className='flex flex-row space-x-3 '>
-                <User2 size={18} className="text-gray-500" />
-                <span className="text-gray-800 font-medium">YOUR ACCOUNT </span>
-              </div>
-              <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
-            </button>
-          </Link>
+          <button
+            onClick={handleClick}
+            className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-gray-100"
+          >
+            <div className="flex flex-row space-x-3">
+              <User2 size={18} className="text-gray-500" />
+              <span className="text-gray-800 font-medium">
+                {user ? 'YOUR ACCOUNT' : 'SIGN IN'}
+              </span>
+            </div>
+            <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+          </button>
 
 
           {user?.role === 'seller' && (
@@ -130,7 +145,8 @@ const MobileSidebar = ({ isOpen, onClose }) => {
         {/* YOUR ACCOUNT */}
         <div className="mb-6">
           <div className="px-6 mb-3">
-            <h3 className="text-lg font-semibold text-gray-900">YOUR ACCOUNT</h3>
+
+
           </div>
           <div className="space-y-1">
             <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">

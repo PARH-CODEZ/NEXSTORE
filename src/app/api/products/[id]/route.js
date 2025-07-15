@@ -1,15 +1,20 @@
 import prisma from '@/lib/prisma';
+import { verifyAuth } from '@/lib/middleware/verifyAuth';   // 👈 add this
 import { NextResponse } from 'next/server';
 
-export async function GET(req, context) {
-  const { params } = context;
-  const productId = parseInt(params.id);
+export async function GET(req, { params }) {
+  const productId = Number(params.id);
 
-  if (isNaN(productId)) {
+  if (!productId) {
     return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
   }
 
+  /* ─── Auth (may be null if public request) ─── */
+  const user = verifyAuth(req);          // returns null if no cookie / token
+  const isAdmin = user?.role === 'admin';
+
   try {
+    /* ─── Fetch product – we need isApproved to decide visibility ─── */
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
@@ -19,36 +24,40 @@ export async function GET(req, context) {
         displayImages: true,
         specifications: true,
         reviews: {
-          include: {
-            user: { select: { FullName: true } }
-          }
+          include: { user: { select: { FullName: true } } },
         },
         variants: {
           include: {
             images: true,
             attributeMapping: {
               include: {
-                value: {
-                  include: {
-                    attribute: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                value: { include: { attribute: true } },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
+    /* ─── Visibility guard ───
+       If the product is NOT approved and the requester is
+       not an admin, hide it. You can choose 403 or 404. Here we
+       return 404 to avoid leaking existence. */
+    if (!product.isApproved && !isAdmin) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    /* ─── Seller info ─── */
     const seller = await prisma.user.findUnique({
       where: { UserID: product.sellerId },
-      select: { FullName: true }
+      select: { FullName: true },
     });
 
+    /* ─── Related products (same brand) ─── */
     const relatedProducts = await prisma.product.findMany({
       where: {
         brandId: product.brandId,
@@ -57,73 +66,52 @@ export async function GET(req, context) {
         NOT: { id: productId },
       },
       take: 10,
-      select: {
-        id:true,
-        title: true,   // or `name` if that’s the column
-      },
+      select: { id: true, title: true },
     });
 
-    // ───────────────────────────────
-    // ✅ Normalize & Group Variants
-    // ───────────────────────────────
-    const normalize = (str) => str.toLowerCase().replace(/\s+/g, '');
-
+    /* ─── Variant grouping logic (unchanged) ─── */
+    const normalize = (s) => s.toLowerCase().replace(/\s+/g, '');
     let primaryAttribute = null;
-    const attributeSet = new Set();
+    const attrSet = new Set();
 
-    for (const variant of product.variants) {
-      for (const mapping of variant.attributeMapping) {
-        const attr = normalize(mapping.value.attribute.name);
-        attributeSet.add(attr);
-      }
+    for (const v of product.variants) {
+      for (const m of v.attributeMapping) attrSet.add(normalize(m.value.attribute.name));
     }
+    if (attrSet.has('storage')) primaryAttribute = 'storage';
+    else if (attrSet.has('size')) primaryAttribute = 'size';
 
-    if (attributeSet.has('storage')) {
-      primaryAttribute = 'storage';
-    } else if (attributeSet.has('size')) {
-      primaryAttribute = 'size';
-    }
-
-    // Group variants by the selected attribute value
-    const grouped = {}; // e.g., { '128gb': { display: '128 GB', variants: [...] } }
-
+    const grouped = {};
     if (primaryAttribute) {
-      for (const variant of product.variants) {
-        const match = variant.attributeMapping.find(
-          m => normalize(m.value.attribute.name) === primaryAttribute
+      for (const v of product.variants) {
+        const m = v.attributeMapping.find(
+          (m) => normalize(m.value.attribute.name) === primaryAttribute
         );
-        if (!match) continue;
-
-        const key = normalize(match.value.value);
-        if (!grouped[key]) {
-          grouped[key] = {
-            display: match.value.value.trim(),
-            variants: []
-          };
-        }
-        grouped[key].variants.push(variant);
+        if (!m) continue;
+        const key = normalize(m.value.value);
+        if (!grouped[key])
+          grouped[key] = { display: m.value.value.trim(), variants: [] };
+        grouped[key].variants.push(v);
       }
     }
+    const attributeValues = Object.values(grouped).map((g) => g.display);
 
-    // Keep order of first appearance
-    const attributeValues = Object.values(grouped).map(g => g.display);
-
+    /* ─── Response ─── */
     return NextResponse.json({
       product,
-      sellerName: seller?.FullName || 'Unknown Seller',
+      sellerName: seller?.FullName ?? 'Unknown Seller',
       brand: {
-        name: product.brand?.name || 'No Brand',
-        imageUrl: product.brand?.imageUrl || null
+        name: product.brand?.name ?? 'No Brand',
+        imageUrl: product.brand?.imageUrl ?? null,
       },
       relatedProducts,
       variantData: {
         primaryAttribute,
-        attributeValues,         // ['128 GB', '256 GB'] or ['S', 'M', 'L']
-        groupedVariants: grouped // { '128gb': { display: '128 GB', variants: [...] } }
-      }
+        attributeValues,
+        groupedVariants: grouped,
+      },
     });
-  } catch (error) {
-    console.error('Error fetching product:', error);
+  } catch (err) {
+    console.error('Error fetching product:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

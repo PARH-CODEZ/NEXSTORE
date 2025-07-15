@@ -43,6 +43,7 @@ export async function GET(req) {
     //  Fetch matching products
     const products = await prisma.product.findMany({
       where: {
+           isApproved: true,
         OR: [
           {
             name: {

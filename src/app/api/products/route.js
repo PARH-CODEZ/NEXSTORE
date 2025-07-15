@@ -1,9 +1,17 @@
 // /app/api/products/route.js
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-
+import { verifyAuth } from '@/lib/middleware/verifyAuth';
 export async function POST(req) {
   try {
+    const user = verifyAuth(req);
+
+    if (!user || user.role !== 'seller') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+
+
     const body = await req.json();
     const {
       title,
@@ -54,7 +62,7 @@ export async function POST(req) {
             connect: { id: Number(brandId) }
           }
         }),
-       
+
 
         specifications: {
           create: specifications.map(spec => ({
@@ -196,3 +204,5 @@ export async function DELETE(req) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+

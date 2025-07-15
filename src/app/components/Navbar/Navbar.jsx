@@ -169,7 +169,7 @@ const Navbar = ({ notFixed = false }) => {
                     {/* Logo */}
                     <Link
                         href="/"
-                        className="font-bold text-xl md:text-sm lg:text-md  xl:text-2xl cursor-pointer select-none relative z-50"
+                        className="font-semibold text-xl md:text-sm lg:text-md  xl:text-xl cursor-pointer select-none relative z-50"
                     >
                         NEXSTORE
                     </Link>
