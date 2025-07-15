@@ -1,45 +1,60 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar/Navbar';
+import Navbar from '@/app/components/Navbar/Navbar';
 import { Plus, Download, Upload, Package, DollarSign, ShoppingCart, TrendingUp, Search, Filter, ArrowUpDown, RefreshCw, } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
-import FullScreenLoader from '../components/FullScreenLoader/FullScreenLoader';
-import SellerProductGrid from '../components/SellerProductCard/SellerProductCard';
+import FullScreenLoader from '@/app/components/FullScreenLoader/FullScreenLoader';
+import AdminProductGrid from '@/app/components/AdminProductCard/AdminProductCard';
+
 
 export default function ProductsPage() {
   const user = useSelector((state) => state.user.user);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [loadingCats, setLoadingCats] = useState(false);
-
   const [update, setUpdate] = useState(false)
 
-  useEffect(() => {
-    if (!user || user.role !== 'seller') return;
 
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        const res = await fetch('/api/sellerproducts', {
-          method: 'POST',
-          credentials: 'include', // ensures cookies (like HttpOnly tokens) are sent
-        });
 
-        if (!res.ok) throw new Error('Failed to fetch products');
-        const data = await res.json(); 
-        setProducts(data.products || []);
-        setTotalRevenue(data.stats.totalRevenue || 0)
-        setTotalSales(data.stats.totalSales || 0)
-        setActiveProducts(data.stats.activeProducts || 0)
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalProducts: 0,
+  });
+
+  async function fetchProducts(page = 1) {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/adminproducts?page=${page}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch products');
+      const data = await res.json();
+
+      console.log(data)
+
+      setProducts(data.products || []);
+      setPagination(data.pagination || {});
+      setTotalRevenue(data.stats.totalRevenue || 0);
+      setTotalSales(data.stats.totalSales || 0);
+      setActiveProducts(data.stats.activeProducts || 0);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+
     fetchProducts();
-  }, [user, update]);
+  }, [user, update, currentPage]);
 
   const handleUpdate = () => {
     setUpdate(true)
@@ -47,8 +62,8 @@ export default function ProductsPage() {
 
   useEffect(() => {
 
-    if (!user || user.role !== 'seller') {
-      return
+    if (!user || user.role !== 'admin') {
+
     }
 
     async function fetchCategories() {
@@ -76,7 +91,9 @@ export default function ProductsPage() {
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [totalSales, setTotalSales] = useState(0)
   const [activeProducts, setActiveProducts] = useState(0)
-
+  const [selectedSeller, setSelectedSeller] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  
   useEffect(() => {
     let filtered = [...products];
 
@@ -86,20 +103,20 @@ export default function ProductsPage() {
       );
     }
 
+    if (selectedSeller !== null) {
+      filtered = filtered.filter((p) => p.sellerId === selectedSeller);
+    }
+
+    if (selectedProduct !== null) {
+      filtered = filtered.filter((p) => p.id === selectedProduct);
+    }
+
     if (selectedStatus !== 'all') {
       filtered = filtered.filter((p) => {
-        if (selectedStatus === 'active') {
-          return p.isApproved === true && p.stockAvailable === true;
-        }
-
-        if (selectedStatus === 'pending') {
-          return p.isApproved === false;
-        }
-
-        if (selectedStatus === 'inactive') {
-          return p.stockAvailable === false;
-        }
-
+        if (selectedStatus === 'active')
+          return p.isApproved && p.stockAvailable;
+        if (selectedStatus === 'pending') return !p.isApproved;
+        if (selectedStatus === 'inactive') return !p.stockAvailable;
         return true;
       });
     }
@@ -111,7 +128,15 @@ export default function ProductsPage() {
     }
 
     setFilteredProducts(filtered);
-  }, [products, selectedCategory, selectedStatus, searchTerm]);
+  }, [
+    products,
+    selectedCategory,
+    selectedStatus,
+    searchTerm,
+    selectedProduct,
+    selectedSeller,
+  ]);
+
 
   const handleRefresh = () => {
     setSearchTerm('');
@@ -125,13 +150,12 @@ export default function ProductsPage() {
 
   return (
     <div className="overflow-x-hidden">
-      <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-              MY PRODUCTS AND LISTINGS
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+              ALL PRODUCTS AND LISTINGS
             </h1>
             <p className="text-sm sm:text-base text-gray-600 uppercase">
               Manage your product listings and inventory
@@ -174,6 +198,27 @@ export default function ProductsPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+
+
+              <input
+                type="number"
+                placeholder="SEARCH SELLER"
+                className="pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                value={selectedSeller ?? ''}
+                onChange={(e) =>
+                  setSelectedSeller(e.target.value ? Number(e.target.value) : null)
+                }
+              />
+
+              <input
+                type="number"
+                placeholder="SEARCH PRODUCT"
+                className="pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                value={selectedProduct ?? ''}
+                onChange={(e) =>
+                  setSelectedProduct(e.target.value ? Number(e.target.value) : null)
+                }
+              />
 
               <div className="flex gap-2 sm:gap-3">
                 <select
@@ -271,7 +316,31 @@ export default function ProductsPage() {
 
 
 
-        <SellerProductGrid products={filteredProducts} onUpdate={handleUpdate} />
+        <AdminProductGrid products={filteredProducts} onUpdate={handleUpdate} />
+        <div className="flex justify-center  items-center mt-8 gap-4">
+          <button
+            disabled={pagination.page === 1}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            className="px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span className="text-sm text-gray-600">
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+
+          <button
+            disabled={pagination.page === pagination.totalPages}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, pagination.totalPages))
+            }
+            className="px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+
       </div>
     </div>
   );
@@ -293,5 +362,4 @@ function StatCard({ title, value, Icon, bgFrom, bgTo }) {
     </div>
   );
 }
-
 
