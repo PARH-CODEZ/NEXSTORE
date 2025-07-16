@@ -5,8 +5,11 @@ import { useSelector } from 'react-redux';
 import Navbar from '../components/Navbar/Navbar';
 import CategoryNav from '../components/Categories/Categories';
 import EmptyCartContainer from '../components/EmptyCartContainer/EmptyCart';
+import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
 
 export default function ShoppingCart() {
+    const router = useRouter()
     const user = useSelector((state) => state.user.user);
     const [cartItems, setCartItems] = useState([]);
     const [empty, setEmpty] = useState(false);
@@ -14,51 +17,113 @@ export default function ShoppingCart() {
     const [selected, setSelected] = useState({});
     const [loading, setLoading] = useState(false)
 
+
+
+
+    const fetchCart = async () => {
+        try {
+
+            setLoading(true)
+            const res = await fetch('/api/cart', {
+                method: 'GET',
+                credentials: 'include',
+            });
+
+            const data = await res.json();
+            console.log(data)
+            if (!res.ok || !data.items || data.items.length === 0) {
+                setEmpty(true);
+            } else {
+                setCartItems(data.items);
+                const qtyMap = {};
+                const selectedMap = {};
+                data.items.forEach((item) => {
+                    qtyMap[item.id] = item.quantity;
+                    selectedMap[item.id] = true;
+                });
+                setQuantities(qtyMap);
+                setSelected(selectedMap);
+                setLoading(false)
+            }
+        } catch (error) {
+            console.error('Error loading cart:', error);
+            setEmpty(true);
+        }
+    };
     useEffect(() => {
         if (!user || user.role !== 'customer') {
             setEmpty(true);
             return;
         }
 
-        const fetchCart = async () => {
-            try {
-
-                setLoading(true)
-                const res = await fetch('/api/cart', {
-                    method: 'GET',
-                    credentials: 'include',
-                });
-
-                const data = await res.json();
-                if (!res.ok || !data.items || data.items.length === 0) {
-                    setEmpty(true);
-                } else {
-                    setCartItems(data.items);
-                    const qtyMap = {};
-                    const selectedMap = {};
-                    data.items.forEach((item) => {
-                        qtyMap[item.id] = item.quantity;
-                        selectedMap[item.id] = true;
-                    });
-                    setQuantities(qtyMap);
-                    setSelected(selectedMap);
-                    setLoading(false)
-                }
-            } catch (error) {
-                console.error('Error loading cart:', error);
-                setEmpty(true);
-            }
-        };
 
         fetchCart();
     }, [user]);
 
-    const updateQuantity = (id, change) => {
-        setQuantities((prev) => ({
-            ...prev,
-            [id]: Math.max(1, (prev[id] || 1) + change),
-        }));
+    const updateQuantity = async (itemId, change) => {
+        const newQty = Math.max(1, (quantities[itemId] || 1) + change);
+
+        if (newQty === quantities[itemId]) return; // silently prevent if no actual change
+        try {
+            const res = await fetch('/api/cart/update', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    itemId,
+                    quantity: newQty,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (res.status === 400) {
+                toast.error(data?.error)
+                return
+            }
+
+            if (!res.ok) {
+                console.error('Failed to update quantity:', data?.error);
+                // Optionally revert local state or show toast
+            }
+            fetchCart()
+
+        } catch (err) {
+            console.error('Error updating quantity:', err);
+            // Optionally revert local state
+        }
     };
+
+
+    const deleteCartItem = async (itemId) => {
+        try {
+            const res = await fetch('/api/cart/delete', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ itemId }),
+            });
+
+            if (res.ok) {
+                setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+                fetchCart()
+            } else {
+                const errData = await res.json();
+                console.error('Failed to delete:', errData);
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+        }
+    };
+
+    const deselectAll = () => {
+        setSelected({})
+    }
+
 
     const formatPrice = (price) =>
         new Intl.NumberFormat('en-IN', {
@@ -97,11 +162,17 @@ export default function ShoppingCart() {
                         <div className="xl:max-w-[80%] mx-auto p-4  min-h-screen">
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 {/* Main Cart Section */}
-                                <div className="lg:col-span-2">
+                                <div className="lg:col-span-2 order-2 lg:order-1 ">
                                     <div className="bg-white rounded-sm shadow-md p-6 mb-6 ">
-                                        <div className="flex items-center justify-between mb-8 border-b border-grey-700 pb-10 ">
-                                            <h1 className="text-2xl font-semibold text-gray-700 uppercase">Shopping Cart</h1>
-                                            <button className="text-blue-600 hover:text-blue-800 text-sm uppercase">Deselect all items</button>
+                                        <div className="flex items-center justify-between mb-8 border-b border-grey-500 pb-10 ">
+                                            <h1 className="text-xl font-semibold text-gray-700 uppercase">Shopping Cart</h1>
+                                            <button
+                                                className="text-blue-600 hover:text-blue-800 text-sm uppercase"
+                                                onClick={deselectAll} // ✅ This is correct
+                                            >
+                                                Deselect all items
+                                            </button>
+
                                         </div>
 
                                         {cartItems.map((item) => {
@@ -111,16 +182,20 @@ export default function ShoppingCart() {
 
                                             return (
                                                 <div key={item.id} className="border-b border-gray-200 pb-6 mb-6">
-                                                    <div className="flex flex-col sm:flex-row gap-4">
-                                                        <div className="flex items-start gap-4">
+                                                    <div className="flex flex-row sm:flex-row gap-4">
+                                                        <div className="flex md:items-start gap-4">
                                                             <input
                                                                 type="checkbox"
-                                                                checked={selected[item.id]}
+                                                                checked={!!selected[item.id]}
                                                                 onChange={(e) =>
-                                                                    setSelected((prev) => ({ ...prev, [item.id]: e.target.checked }))
+                                                                    setSelected((prev) => ({
+                                                                        ...prev,
+                                                                        [item.id]: e.target.checked,
+                                                                    }))
                                                                 }
                                                                 className="mt-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                                             />
+
                                                             <img
                                                                 src={item.variant.images?.[0]?.imageUrl || '/placeholder.jpg'}
                                                                 alt={product.name}
@@ -129,11 +204,20 @@ export default function ShoppingCart() {
                                                         </div>
 
                                                         <div className="flex-1 min-w-0">
-                                                            <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2 uppercase">
+                                                            <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2 uppercase cursor-pointer "onClick={()=>router.push(`/products/${item.variant.productId}`)}>
                                                                 {product.name}
                                                             </h3>
 
                                                             <div className="text-sm text-green-600 font-medium mb-2 uppercase">In stock</div>
+
+                                                            <div className="md:hidden">
+                                                                <div className="text-red-600 text-xl font-semibold mb-1">
+                                                                    {formatPrice(discountedPrice)}
+                                                                </div>
+                                                                <div className="text-sm text-gray-500 line-through">
+                                                                    M.R.P.: {formatPrice(product.price)}
+                                                                </div>
+                                                            </div>
 
                                                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                                                                 <span className="text-sm text-gray-600 uppercase">
@@ -146,10 +230,11 @@ export default function ShoppingCart() {
                                                                     <button
                                                                         onClick={() => updateQuantity(item.id, -1)}
                                                                         className="p-2 hover:bg-gray-100 rounded-l-md"
-                                                                        disabled={qty <= 1}
+                                                                        disabled={quantities[item.id] <= 1}
                                                                     >
                                                                         <Minus className="w-4 h-4" />
                                                                     </button>
+
                                                                     <span className="px-4 py-2 border-x border-gray-300 min-w-12 text-center">
                                                                         {qty}
                                                                     </span>
@@ -161,14 +246,18 @@ export default function ShoppingCart() {
                                                                     </button>
                                                                 </div>
 
-                                                                <button className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
+                                                                <button
+                                                                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                                                                    onClick={() => deleteCartItem(item.id)}
+                                                                >
                                                                     <Trash2 className="w-4 h-4 uppercase" />
                                                                     DELETE
                                                                 </button>
+
                                                             </div>
                                                         </div>
 
-                                                        <div className="text-right">
+                                                        <div className="text-right hidden md:block">
                                                             <div className="text-red-600 text-xl font-semibold mb-1">
                                                                 {formatPrice(discountedPrice)}
                                                             </div>
@@ -191,20 +280,23 @@ export default function ShoppingCart() {
                                 </div>
 
                                 {/* Sidebar */}
-                                <div className="lg:col-span-1">
+                                <div className="lg:col-span-1 order-1 lg:order-2 ">
                                     <div className="bg-white rounded-sm shadow-md p-6 sticky top-4">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <Check className="w-5 h-5 text-green-600" />
-                                            <span className="text-green-600 font-medium text-sm uppercase">
-                                                Your order is eligible for FREE Delivery.
-                                            </span>
-                                        </div>
+                                        {subtotal > 200 && (
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <Check className="w-5 h-5 text-green-600" />
+                                                <span className="text-green-600 font-medium text-sm uppercase">
+                                                    Your order is eligible for FREE Delivery.
+                                                </span>
+                                            </div>
+                                        )}
+
                                         <p className="text-sm text-gray-600 mb-4 uppercase">
                                             Choose <button className="text-blue-600 ">FREE DELIVERY</button> option at checkout.
                                         </p>
 
                                         <div className="text-xl font-semibold mb-4">
-                                            SUBTOTAL ({cartItems.length} items): {formatPrice(subtotal)}
+                                            SUBTOTAL ({cartItems.length} ITEMS): {formatPrice(subtotal)}
                                         </div>
 
                                         <div className="flex items-center gap-2 mb-4">
@@ -212,7 +304,7 @@ export default function ShoppingCart() {
                                             <span className="text-xs text-gray-600 uppercase">This order contains a gift</span>
                                         </div>
 
-                                        <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-3 px-4 rounded-lg mb-4">
+                                        <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-3 px-4 rounded-sm mb-4">
                                             PROCEED TO BUY
                                         </button>
                                     </div>
