@@ -53,13 +53,14 @@ export default function ProductsPage() {
   useEffect(() => {
     if (!user || user.role !== 'admin') return;
 
-    fetchProducts();
+    fetchProducts(currentPage);   // <-- use the state value
   }, [user, update, currentPage]);
 
-  const handleUpdate = () => {
-    setUpdate(true)
-  };
 
+  const handleUpdate = () => {
+    setUpdate(prev => !prev);
+  };
+  
   useEffect(() => {
 
     if (!user || user.role !== 'admin') {
@@ -93,7 +94,7 @@ export default function ProductsPage() {
   const [activeProducts, setActiveProducts] = useState(0)
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  
+
   useEffect(() => {
     let filtered = [...products];
 

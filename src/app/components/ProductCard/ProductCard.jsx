@@ -1,10 +1,12 @@
-import React from 'react';
+'use client'
+import React, { useState } from 'react';
 import { Star, StarHalf } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 
 const ProductCard = ({ products = [] }) => {
-  const router=useRouter();
+  const router = useRouter();
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -70,6 +72,52 @@ const ProductCard = ({ products = [] }) => {
     return sum / reviews.length;
   };
 
+  const [successId, setSuccessId] = useState(null);
+  const [errorId, setErrorId] = useState(null);
+
+
+  async function handleAddToCart(e, variantId) {
+    e.stopPropagation();
+
+    try {
+      const res = await fetch('/api/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ variantId, quantity: 1 }),
+      });
+
+      // 401 → go sign‑in
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+
+      if(res.status === 400){
+        toast.error("MAX QTY REACHED")
+      }
+
+      // non‑OK (4xx / 5xx) → treat as failure
+      if (!res.ok) throw new Error((await res.json()).error || 'Request failed');
+
+      // ✅ success animation
+      setSuccessId(variantId);
+      setTimeout(() => setSuccessId(null), 1500);
+    } catch (err) {
+      console.error('Add‑to‑cart error:', err);
+
+      // ❌ failure animation
+      setErrorId(variantId);
+      setTimeout(() => setErrorId(null), 1200);
+
+      // (optional) toast / alert
+      // toast.error(err.message || 'Could not add to cart');
+    }
+  }
+
+
+
+
   return (
     <div className="space-y-4">
       {products.map((product, index) => {
@@ -77,8 +125,7 @@ const ProductCard = ({ products = [] }) => {
         const reviewCount = product._count?.reviews || 0;
 
         return (
-          <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden w-full"
-           onClick={() => router.push(`/products/${product.id}`)}>
+          <div key={index} className="bg-white border border-gray-200 rounded-lg overflow-hidden w-full">
             {/* Desktop Layout */}
             <div className="hidden lg:block">
               <div className="p-4">
@@ -89,7 +136,7 @@ const ProductCard = ({ products = [] }) => {
                   </div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 cursor-pointer " onClick={() => router.push(`/products/${product.id}`)}>
                   <div className="flex-shrink-0 flex items-center justify-center">
                     <img
                       src={getProductImage(product)}
@@ -100,7 +147,7 @@ const ProductCard = ({ products = [] }) => {
 
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2 uppercase">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2  cursor-pointer uppercase" onClick={() => router.push(`/products/${product.id}`)}>
                       {product.name}
                     </h3>
 
@@ -154,10 +201,25 @@ const ProductCard = ({ products = [] }) => {
                     <div className="text-sm text-gray-600 mb-4">
                       Service: Installation
                     </div>
-
-                    <button className="bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-2 text-sm font-medium mb-3 uppercase ">
-                      Add to cart
+                    <button
+                      onClick={(e) => handleAddToCart(e, product.variants?.[0]?.id)}
+                      className={` px-12 py-2 text-sm font-medium uppercase rounded-sm transition-transform duration-300
+    ${successId === product.variants?.[0]?.id
+                          ? 'bg-blue-500 text-white scale-95'
+                          : errorId === product.variants?.[0]?.id
+                            ? 'bg-red-500 text-white scale-95'
+                            : 'bg-yellow-400 hover:bg-yellow-500 text-black'}`}
+                    >
+                      {successId === product.variants?.[0]?.id
+                        ? '✓ Added to cart'
+                        : errorId === product.variants?.[0]?.id
+                          ? '✕ Failed'
+                          : 'Add to cart'}
                     </button>
+
+
+
+
 
                     {product._count.variants > 0 && (
                       <div className="text-sm text-blue-600 hover:underline cursor-pointer">
@@ -177,7 +239,7 @@ const ProductCard = ({ products = [] }) => {
                   <span className="text-xs text-gray-500">Sponsored</span>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex cursor-pointer gap-3" onClick={() => router.push(`/products/${product.id}`)}>
                   <div className="flex-shrink-0 flex items-center justify-center">
                     <img
                       src={getProductImage(product)}
@@ -186,8 +248,9 @@ const ProductCard = ({ products = [] }) => {
                     />
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-3 uppercase">
+                  <div className="flex-1 min-w-0"
+                  >
+                    <h3 className="text-sm font-medium text-gray-900 mb-1 cursor-pointer line-clamp-3 uppercase" onClick={() => router.push(`/products/${product.id}`)}>
                       {product.name}
                     </h3>
 
@@ -239,11 +302,27 @@ const ProductCard = ({ products = [] }) => {
                   </div>
                 </div>
 
-                <div className="mt-3 justify-center items-center flex">
-                  <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 text-sm font-medium uppercase rounded-sm md:w-[80%] ">
-                    Add to cart
+                <div className="mt-3 flex justify-center items-center">
+                  <button
+                    onClick={(e) => handleAddToCart(e, product.variants?.[0]?.id)}
+                    className={`w-full py-2 text-sm font-medium uppercase rounded-sm transition-transform duration-300 md:w-[80%]
+    ${successId === product.variants?.[0]?.id
+                        ? 'bg-blue-500 text-white scale-95'
+                        : errorId === product.variants?.[0]?.id
+                          ? 'bg-red-500 text-white scale-95'
+                          : 'bg-yellow-400 hover:bg-yellow-500 text-black'
+                      }`}
+                  >
+                    {successId === product.variants?.[0]?.id
+                      ? '✓ Added to cart'
+                      : errorId === product.variants?.[0]?.id
+                        ? '✕ Failed to add'
+                        : 'Add to cart'}
                   </button>
+
                 </div>
+
+
               </div>
             </div>
           </div>

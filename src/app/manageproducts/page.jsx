@@ -27,7 +27,7 @@ export default function ProductsPage() {
         });
 
         if (!res.ok) throw new Error('Failed to fetch products');
-        const data = await res.json(); 
+        const data = await res.json();
         setProducts(data.products || []);
         setTotalRevenue(data.stats.totalRevenue || 0)
         setTotalSales(data.stats.totalSales || 0)
@@ -42,7 +42,7 @@ export default function ProductsPage() {
   }, [user, update]);
 
   const handleUpdate = () => {
-    setUpdate(true)
+    setUpdate(prev => !prev);
   };
 
   useEffect(() => {

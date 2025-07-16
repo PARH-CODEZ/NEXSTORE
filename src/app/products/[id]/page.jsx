@@ -39,11 +39,9 @@ const Productpage = () => {
   const [giftOptions, setGiftOptions] = useState(false);
   const [exchangeOption, setExchangeOption] = useState('without');
   const [attributeValues, setAttributeValues] = useState([]);
-
   const [attributeMap, setAttributeMap] = useState({});
   const [primaryAttribute, setPrimaryAttribute] = useState(null);
   const [selectedPrimaryValue, setSelectedPrimaryValue] = useState(null);
-
   const [isOpen, setIsOpen] = useState(false)
   const [reviewAdded, setReviewAdded] = useState(false);
   const [notFound, setNotFound] = useState(false)
@@ -265,6 +263,57 @@ const Productpage = () => {
   const options = { day: "numeric", month: "long" };
   const deliveryStartFormatted = deliveryStart.toLocaleDateString("en-IN", options);
   const deliveryEndFormatted = deliveryEnd.toLocaleDateString("en-IN", options);
+
+
+  const [successId, setSuccessId] = useState(null);
+  const [errorId, setErrorId] = useState(null);
+
+
+  async function handleAddToCart(e, variantId) {
+
+    e.stopPropagation();
+
+    try {
+      const res = await fetch('/api/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ variantId, quantity: 1 }),
+      });
+
+      // 401 → go sign‑in
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+
+      if (res.status === 400) {
+        toast.error("MAX QTY REACHED")
+      }
+
+      // non‑OK (4xx / 5xx) → treat as failure
+      if (!res.ok) throw new Error((await res.json()).error || 'Request failed');
+
+      // ✅ success animation
+      setSuccessId(variantId);
+      setTimeout(() => setSuccessId(null), 1500);
+    } catch (err) {
+      console.error('Add‑to‑cart error:', err);
+
+      // ❌ failure animation
+      setErrorId(variantId);
+      setTimeout(() => setErrorId(null), 1200);
+
+      // (optional) toast / alert
+      // toast.error(err.message || 'Could not add to cart');
+    }
+  }
+
+
+
+
+
+
 
   if (notFound) return (
     <>
@@ -527,19 +576,26 @@ const Productpage = () => {
                       <div className='md:hidden mb-4 border-b border-gray-400 pb-8'>
                         <div className="pb-8">
                           <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <span className="font-semibold text-sm uppercase">With Exchange</span>
-                              <div className="text-sm text-orange-600 font-medium">Up to ₹{Math.round(product.price * (30 / 100)).toLocaleString("en-IN")} off</div>
-                            </div>
-                            <input
-                              type="radio"
-                              name="exchange"
-                              value="with"
-                              checked={exchangeOption === 'with'}
-                              onChange={(e) => setExchangeOption(e.target.value)}
-                              className="w-4 h-4"
-                            />
+                            {['mobiles', 'electronics', 'washing-machines', 'acs', 'laptops'].includes(product.category?.Slug) && (
+                              <>
+                                <div>
+                                  <span className="font-semibold text-sm uppercase">With Exchange</span>
+                                  <div className="text-sm text-orange-600 font-medium">
+                                    Up to ₹{Math.round(product.price * (30 / 100)).toLocaleString("en-IN")} off
+                                  </div>
+                                </div>
+                                <input
+                                  type="radio"
+                                  name="exchange"
+                                  value="with"
+                                  checked={exchangeOption === 'with'}
+                                  onChange={(e) => setExchangeOption(e.target.value)}
+                                  className="w-4 h-4"
+                                />
+                              </>
+                            )}
                           </div>
+
                           <div className="flex items-center justify-between">
                             <div>
                               <span className="font-semibold text-sm uppercase">Buy new:</span>
@@ -556,8 +612,8 @@ const Productpage = () => {
                               className="w-4 h-4"
                             />
                           </div>
-
                         </div>
+
 
                         {/* Delivery Info */}
                         <div className="mb-4">
@@ -608,14 +664,27 @@ const Productpage = () => {
                         {/* Action Buttons */}
                         <div className="space-y-3">
                           <button
-                            className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase 
-                             ${!product.stockAvailable
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-yellow-400 hover:bg-yellow-500 text-black'}`}
+                            onClick={(e) => handleAddToCart(e, selectedVariant.id)}
                             disabled={!product.stockAvailable}
+                            className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase transition-transform duration-300
+    ${!product.stockAvailable
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : successId === selectedVariant.id
+                                  ? 'bg-blue-500 text-white scale-95'
+                                  : errorId === selectedVariant.id
+                                    ? 'bg-red-500 text-white scale-95'
+                                    : 'bg-yellow-400 hover:bg-yellow-500 text-black'
+                              }
+  `}
                           >
-                            Add to Cart
+                            {successId === selectedVariant.id
+                              ? '✓ Added to Cart'
+                              : errorId === selectedVariant.id
+                                ? 'Failed'
+                                : 'Add to Cart'}
                           </button>
+
+
 
                           <button
                             className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase 
@@ -696,20 +765,25 @@ const Productpage = () => {
                   <div className="top-20 flex-col h-[700px] right-6 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 hidden md:block">
                     {/* Exchange Options */}
                     <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <span className="font-semibold text-sm uppercase">With Exchange</span>
-                          <div className="text-sm text-orange-600 font-medium">Up to ₹{Math.round(product.price * (30 / 100)).toLocaleString("en-IN")} off</div>
+                      {['mobiles', 'electronics', 'washing-machines', 'acs', 'laptops'].includes(product.category?.Slug) && (
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <span className="font-semibold text-sm uppercase">With Exchange</span>
+                            <div className="text-sm text-orange-600 font-medium">
+                              Up to ₹{Math.round(product.price * (30 / 100)).toLocaleString("en-IN")} off
+                            </div>
+                          </div>
+                          <input
+                            type="radio"
+                            name="exchange"
+                            value="with"
+                            checked={exchangeOption === 'with'}
+                            onChange={(e) => setExchangeOption(e.target.value)}
+                            className="w-4 h-4"
+                          />
                         </div>
-                        <input
-                          type="radio"
-                          name="exchange"
-                          value="with"
-                          checked={exchangeOption === 'with'}
-                          onChange={(e) => setExchangeOption(e.target.value)}
-                          className="w-4 h-4"
-                        />
-                      </div>
+                      )}
+
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="font-semibold text-sm uppercase">Buy new:</span>
@@ -726,8 +800,8 @@ const Productpage = () => {
                           className="w-4 h-4"
                         />
                       </div>
-
                     </div>
+
 
                     {/* Delivery Info */}
                     <div className="mb-4">
@@ -778,19 +852,32 @@ const Productpage = () => {
                     <div className="space-y-3">
                       {/* Add to Cart */}
                       <button
-                        className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase
-      ${!product.stockAvailable
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-yellow-400 hover:bg-yellow-500 text-black'}`}
+                        onClick={(e) => handleAddToCart(e, selectedVariant.id)}
                         disabled={!product.stockAvailable}
+                        className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase transition-transform duration-300
+    ${!product.stockAvailable
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : successId === selectedVariant.id
+                              ? 'bg-blue-500 text-white scale-95'
+                              : errorId === selectedVariant.id
+                                ? 'bg-red-500 text-white scale-95'
+                                : 'bg-yellow-400 hover:bg-yellow-500 text-black'
+                          }
+  `}
                       >
-                        Add to Cart
+                        {successId === selectedVariant.id
+                          ? '✓ Added to Cart'
+                          : errorId === selectedVariant.id
+                            ? 'Failed'
+                            : 'Add to Cart'}
                       </button>
+
+
 
                       {/* Buy Now */}
                       <button
                         className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase
-      ${!product.stockAvailable
+                           ${!product.stockAvailable
                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
                         disabled={!product.stockAvailable}

@@ -236,11 +236,11 @@ const ProductCards = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-5 bg-gray-200 min-h-screen xl:max-w-[98%] 2xl:mt-[-450px] xl:mt-[-325px] lg:mt-[-220px] md:mt-[-140px] z-[9999]">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8 z-[9999]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8 ">
         {cardData.map((card) => (
           <div
             key={card.id}
-            className="bg-white relative rounded-lg p-5 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 sm:h-[450px] md:h-[440px] z-[9999]"
+            className="bg-gray-100 relative rounded-lg p-5 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 sm:h-[450px] md:h-[440px] z-[8]"
           >
             <h3 className="text-xl font-semibold text-gray-900 mb-4 leading-tight uppercase">
               {card.title}

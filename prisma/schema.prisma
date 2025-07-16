@@ -18,6 +18,7 @@ model User {
   CreatedAt        DateTime        @default(now())
   ordersAsSeller   Order[]         @relation("SellerOrders")
   ordersAsCustomer Order[]         @relation("CustomerOrders")
+  cart             Cart[]          @relation("UserCart")
   reviews          ProductReview[]
 }
 
@@ -36,6 +37,44 @@ model UserAddress {
 
   @@index([UserID])
 }
+
+model Cart {
+  id        Int         @id @default(autoincrement())
+  userId    Int         @unique
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+   user       User      @relation("UserCart", fields: [userId], references: [UserID])
+  items     CartItem[]
+}
+
+model CartItem {
+  id         Int            @id @default(autoincrement())
+  cartId     Int
+  variantId  Int
+  quantity   Int            @default(1)
+  addedAt    DateTime       @default(now())
+
+  cart       Cart           @relation(fields: [cartId], references: [id])
+  variant    ProductVariant  @relation("VariantCart", fields: [variantId], references: [id])
+
+
+  @@unique([cartId, variantId]) // Prevent duplicate variants in cart
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 model SellerProfile {
   SellerID      Int      @id
@@ -127,6 +166,7 @@ model ProductVariant {
   images            ProductImage[]               @relation("VariantImages")
   product           Product                      @relation(fields: [productId], references: [id])
   attributeMapping  ProductVariantAttributeMap[]
+   cartItems         CartItem[]                       @relation("VariantCart") // 🔥 Added
 
   @@index([productId])
 }

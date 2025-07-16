@@ -131,6 +131,7 @@ export async function POST(req, { params }) {
         variants: {
           take: 1,
           select: {
+            id: true,
             images: {
               take: 1,
               select: { imageUrl: true },
@@ -150,8 +151,8 @@ export async function POST(req, { params }) {
         sort === 'PriceLowToHigh'
           ? { price: 'asc' }
           : sort === 'PriceHighToLow'
-          ? { price: 'desc' }
-          : { createdAt: 'desc' },
+            ? { price: 'desc' }
+            : { createdAt: 'desc' },
     });
 
     let highlightedProduct = null;
@@ -176,6 +177,7 @@ export async function POST(req, { params }) {
           variants: {
             take: 1,
             select: {
+               id: true,     
               images: {
                 take: 1,
                 select: { imageUrl: true },

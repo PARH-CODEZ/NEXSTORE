@@ -61,7 +61,7 @@ const ProductCard = ({ products = [], onUpdate }) => {
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Request failed');
-            router.replace(window.location.pathname);
+            onUpdate?.()
         } catch (err) {
             console.error('Approval update error:', err);
             alert('Error updating product approval status');
@@ -254,10 +254,10 @@ const ProductCard = ({ products = [], onUpdate }) => {
 
 
 // ✅ ProductGrid wrapper - receives products from parent
-const AdminProductGrid = ({ products = [] }) => {
+const AdminProductGrid = ({ products = [], onUpdate }) => {
     return (
         <div className="xl:w-[100%] border-t border-gray-300 mt-7 pt-6">
-            <ProductCard products={products} />
+            <ProductCard products={products} onUpdate={onUpdate} />
         </div>
     );
 };
