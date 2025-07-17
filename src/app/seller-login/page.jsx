@@ -65,6 +65,14 @@ const page = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isExistingUser, setIsExistingUser] = useState(false);
     const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false)
+
+
+
+
+    const handleClose = () => {
+        router.push('/'); // 🔁 Redirects to homepage
+    };
 
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,6 +111,7 @@ const page = () => {
         }
 
         try {
+            setLoading(true)
             const res = await fetch('/api/auth/check-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -120,6 +129,7 @@ const page = () => {
 
             if (exists && role === 'customer') {
                 setErrors({ email: 'This is a customer account.' });
+                setLoading(false)
                 return
             }
 
@@ -128,6 +138,7 @@ const page = () => {
             } else {
                 setCurrentStep('signin');
             }
+            setLoading(false)
         } catch (err) {
             setErrors({ email: err.message });
         }
@@ -176,7 +187,7 @@ const page = () => {
         }
         setErrors({});
 
-
+        setLoading(true)
         const dup = await fetch('/api/auth/check-user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -206,12 +217,14 @@ const page = () => {
             const data = await res.json();
             if (!res.ok) {
                 setErrors({ general: data.error || 'Signup failed' });
+                setLoading(false)
                 return;
             }
 
             toast.success('Seller account created!');
             resetForm();
             setCurrentStep('signup')
+            setLoading(false)
         } catch (err) {
             console.error(err);
             toast.error('Signup failed. Try again.');
@@ -236,6 +249,7 @@ const page = () => {
         }
 
         try {
+            setLoading(true)
             const response = await fetch('/api/auth/login-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -246,11 +260,13 @@ const page = () => {
 
             if (!response.ok) {
                 setErrors({ password: data.error || 'Login failed' });
+                setLoading(false)
                 return;
             }
 
             dispatch(setUser(data.user));
             router.push('/');
+            setLoading(false)
         } catch (error) {
             console.error(error);
             setErrors({ password: 'Server error, try again later' });
@@ -263,12 +279,18 @@ const page = () => {
     if (currentStep === 'initial') {
         return (
             <div className="min-h-screen bg-white flex flex-col">
+                <button
+                    className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
+                    onClick={handleClose}
+                >
+                    &times;
+                </button>
                 <div className="flex-grow flex items-center justify-center p-4">
                     <div className="w-full max-w-sm">
                         {/* Logo */}
                         <div className="text-center mb-6">
                             <h1 className="text-2xl font-bold text-gray-900">NEXSTORE</h1>
-                            <div className="w-20 h-1 bg-blue-400 mx-auto mt-1 rounded"></div>
+                            <div className="w-50 h-1 bg-blue-400 mx-auto mt-1 rounded"></div>
                         </div>
 
                         {/* Form Container */}
@@ -282,7 +304,7 @@ const page = () => {
 
                                 <InputField
                                     type="text"
-                                    placeholder=""
+                                    placeholder="Enter buisness email or phone "
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     error={errors.email}
@@ -290,10 +312,39 @@ const page = () => {
 
                                 <button
                                     type="submit"
-                                    className="w-full bg-blue-400 hover:bg-blue-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors"
+                                    disabled={loading}
+                                    className={`w-full bg-blue-400 hover:bg-blue-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${loading ? "cursor-not-allowed opacity-75" : ""
+                                        }`}
                                 >
-                                    CONTINUE
+                                    {loading ? (
+                                        <>
+                                            <svg
+                                                className="animate-spin h-5 w-5 text-black"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v8z"
+                                                />
+                                            </svg>
+                                            <span className="ml-2">LOADING...</span>
+                                        </>
+                                    ) : (
+                                        "CONTINUE"
+                                    )}
                                 </button>
+
                             </form>
 
                             <div className="mt-4 text-xs text-gray-600">
@@ -317,6 +368,17 @@ const page = () => {
                         </div>
 
                         {/* Footer */}
+
+                        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2 uppercase">Need Help?</h4>
+                            <div className="text-xs text-gray-600 space-y-1">
+                                <div>• Having trouble accessing your account?</div>
+                                <div>• Need to update your business information?</div>
+                            </div>
+                            <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline text-xs mt-2 inline-block">
+                                Contact Seller Support
+                            </a>
+                        </div>
                         <div className="text-center mt-8 text-xs text-gray-500 space-x-4">
                             <a href="#" className="hover:text-blue-600">Conditions of Use</a>
                             <a href="#" className="hover:text-blue-600">Privacy Notice</a>
@@ -335,6 +397,12 @@ const page = () => {
     if (currentStep === 'signup') {
         return (
             <div className="min-h-screen bg-white flex flex-col">
+                <button
+                    className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
+                    onClick={handleClose}
+                >
+                    &times;
+                </button>
                 <div className="flex-grow flex items-center justify-center p-4">
                     <div className="w-full max-w-sm">
                         {/* Logo */}
@@ -438,10 +506,39 @@ const page = () => {
 
                                 <button
                                     type="submit"
-                                    className="w-full bg-blue-400 hover:bg-blue-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors"
+                                    disabled={loading}
+                                    className={`w-full bg-blue-400 hover:bg-blue-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${loading ? "cursor-not-allowed opacity-75" : ""
+                                        }`}
                                 >
-                                    CREATE YOUR NEXSTORE ACCOUNT
+                                    {loading ? (
+                                        <>
+                                            <svg
+                                                className="animate-spin h-5 w-5 text-black"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v8z"
+                                                />
+                                            </svg>
+                                            <span className="ml-2">CREATING ACCOUNT...</span>
+                                        </>
+                                    ) : (
+                                        "REGISTER ACCOUNT"
+                                    )}
                                 </button>
+
                             </form>
 
                             <div className="mt-4 text-xs text-gray-600">
@@ -489,6 +586,12 @@ const page = () => {
     if (currentStep === 'signin') {
         return (
             <div className="min-h-screen bg-white flex flex-col">
+                <button
+                    className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
+                    onClick={handleClose}
+                >
+                    &times;
+                </button>
                 <div className="flex-grow flex items-center justify-center p-4">
                     <div className="w-full max-w-sm">
                         {/* Logo */}
@@ -532,10 +635,39 @@ const page = () => {
 
                                 <button
                                     type="submit"
-                                    className="w-full bg-blue-400 hover:bg-blue-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors"
+                                    disabled={loading}
+                                    className={`w-full bg-blue-400 hover:bg-blue-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${loading ? "cursor-not-allowed opacity-75" : ""
+                                        }`}
                                 >
-                                    SIGN IN
+                                    {loading ? (
+                                        <>
+                                            <svg
+                                                className="animate-spin h-5 w-5 text-black"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v8z"
+                                                />
+                                            </svg>
+                                            <span className="ml-2">SIGNING IN...</span>
+                                        </>
+                                    ) : (
+                                        "SIGN IN"
+                                    )}
                                 </button>
+
                             </form>
 
                             <div className="mt-4 text-xs text-gray-600">

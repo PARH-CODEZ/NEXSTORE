@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 // import sendOtpToPhone from '@/lib/sendOtpToPhone';
 // import Footer from './Footer'; // Uncomment this when you have the Footer component
 import { useDispatch } from 'react-redux';
-import { setUser } from '@/store/userSlice'; 
+import { setUser } from '@/store/userSlice';
 import { toast } from 'react-toastify';
 
 
@@ -54,9 +54,9 @@ const InputField = ({
 );
 
 const Login = () => {
- const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-  const router = useRouter(); 
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState('initial'); //[ initial, signin, signup, password]
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -68,13 +68,14 @@ const Login = () => {
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [otp, setOtp] = useState('');
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false)
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-   const handleClose = () => {
+  const handleClose = () => {
     router.push('/'); // 🔁 Redirects to homepage
   };
 
@@ -111,6 +112,7 @@ const Login = () => {
     }
 
     try {
+      setLoading(true)
       const res = await fetch('/api/auth/check-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -134,6 +136,7 @@ const Login = () => {
       } else {
         setErrors({ email: 'This account is not a customer account.' });
       }
+      setLoading(false)
     } catch (err) {
       setErrors({ email: err.message });
     }
@@ -156,6 +159,7 @@ const Login = () => {
     }
 
     try {
+      setLoading(true)
       const response = await fetch('/api/auth/login-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -164,6 +168,7 @@ const Login = () => {
       const data = await response.json();
       dispatch(setUser(data.user));
       router.push('/');
+      setLoading(false)
     } catch (error) {
       setErrors({ password: 'Server error, try again later' });
     }
@@ -226,6 +231,7 @@ const Login = () => {
 
     // Directly create the user without OTP
     try {
+      setLoading(true)
       const registerRes = await fetch('/api/auth/register-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -239,9 +245,10 @@ const Login = () => {
         return;
       }
 
-      toast.success('Account created successfully!'); 
-      resetForm();          
-      setCurrentStep('initial'); 
+      toast.success('Account created successfully!');
+      resetForm();
+      setCurrentStep('initial');
+      setLoading(false)
 
     } catch (err) {
       console.error(err);
@@ -298,10 +305,10 @@ const Login = () => {
   // Initial Step - Email/Phone Entry
   if (currentStep === 'initial') {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-gray-100 flex flex-col">
         <button
           className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
-          onClick={handleClose} 
+          onClick={handleClose}
         >
           &times;
         </button>
@@ -332,9 +339,37 @@ const Login = () => {
 
                 <button
                   type="submit"
-                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors"
+                  disabled={loading}
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  CONTINUE
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      <span className="ml-2">LOADING...</span>
+                    </>
+
+                  ) : (
+                    "CONTINUE"
+                  )}
                 </button>
               </form>
 
@@ -369,7 +404,7 @@ const Login = () => {
             </div>
           </div>
         </div>
-      
+
       </div>
     );
   }
@@ -377,8 +412,8 @@ const Login = () => {
   // Sign In Step
   if (currentStep === 'signin') {
     return (
-      
-      <div className="min-h-screen bg-white flex flex-col">
+
+      <div className="min-h-screen bg-gray-100 flex flex-col">
         <button
           className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
           onClick={handleClose}
@@ -428,9 +463,36 @@ const Login = () => {
 
                 <button
                   type="submit"
-                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors"
+                  disabled={loading}
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  SIGN IN
+                  {loading ? (
+                   <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      <span className="ml-2">SIGNING IN...</span>
+                    </>
+                  ) : (
+                    "SIGN IN"
+                  )}
                 </button>
               </form>
 
@@ -484,7 +546,7 @@ const Login = () => {
             </div>
           </div>
         </div>
-       
+
       </div>
     );
   }
@@ -492,10 +554,10 @@ const Login = () => {
   // Sign Up Step - Fixed the entire signup form
   if (currentStep === 'signup') {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-gray-100 flex flex-col">
         <button
           className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
-          onClick={handleClose} 
+          onClick={handleClose}
         >
           &times;
         </button>
@@ -578,12 +640,38 @@ const Login = () => {
                     {errors.general}
                   </div>
                 )}
-
                 <button
                   type="submit"
-                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors"
+                  disabled={loading}
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  CREATE YOUR NEXSTORE ACCOUNT
+                  {loading ? (
+                   <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      <span className="ml-2">CREATING ACCOUNT...</span>
+                    </>
+                  ) : (
+                    "CREATE YOUR NEXSTORE ACCOUNT"
+                  )}
                 </button>
               </form>
 
@@ -624,7 +712,7 @@ const Login = () => {
             </div>
           </div>
         </div>
-      
+
       </div>
     );
   }
