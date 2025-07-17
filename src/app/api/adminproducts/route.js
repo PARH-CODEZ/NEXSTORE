@@ -8,12 +8,12 @@ export async function POST(req) {
     const user = verifyAuth(req);
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const isAdmin  = user.role === 'admin';
+    const isAdmin = user.role === 'admin';
     const sellerId = user.userid;
 
     /* ── 2. Pagination params ── */
     const { page = 1, pageSize = 10 } = await req.json().catch(() => ({}));
-    const p     = Math.max(1, Number(page));
+    const p = Math.max(1, Number(page));
     const limit = Math.min(100, Math.max(1, Number(pageSize))); // cap at 100
 
     /* ── 3. Base filters ── */
@@ -39,8 +39,14 @@ export async function POST(req) {
         images: { take: 1, select: { imageUrl: true } },
         category: { select: { Slug: true } },
         reviews: { select: { rating: true } },
-        variants: { take: 1, select: { images: { take: 1, select: { imageUrl: true } } } },
-        _count: { select: { reviews: true, variants: true } },
+        variants: {
+          take: 1,
+          select: {
+            additionalPrice: true,
+            images: { take: 1, select: { imageUrl: true } }
+          }
+        },
+        _count: { select: { reviews: true, variants: true } }
       },
       orderBy: { createdAt: 'desc' },
       skip: (p - 1) * limit,
@@ -70,13 +76,13 @@ export async function POST(req) {
       const pid = v2p[variantId];
       if (!salesMap[pid]) salesMap[pid] = { unitsSold: 0, revenue: 0 };
       salesMap[pid].unitsSold += Number(_sum.quantity ?? 0);
-      salesMap[pid].revenue   += Number(_sum.totalPrice ?? 0);
+      salesMap[pid].revenue += Number(_sum.totalPrice ?? 0);
     }
 
     const enriched = products.map((p) => ({
       ...p,
       unitsSold: salesMap[p.id]?.unitsSold ?? 0,
-      revenue:   salesMap[p.id]?.revenue   ?? 0,
+      revenue: salesMap[p.id]?.revenue ?? 0,
     }));
 
     /* ── 7. Stats (unchanged, but global to admin / seller) ── */
@@ -84,7 +90,7 @@ export async function POST(req) {
 
     const agg = await prisma.orderItem.aggregate({
       where: { variant: sellerFilter, order: { status: 'DELIVERED' } },
-      _sum:  { quantity: true, totalPrice: true },
+      _sum: { quantity: true, totalPrice: true },
     });
 
     const totalRevenue = new Intl.NumberFormat('en-IN', {

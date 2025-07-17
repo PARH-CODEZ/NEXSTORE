@@ -204,7 +204,7 @@ export default function ShoppingCart() {
                                                         </div>
 
                                                         <div className="flex-1 min-w-0">
-                                                            <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2 uppercase cursor-pointer "onClick={()=>router.push(`/products/${item.variant.productId}`)}>
+                                                            <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2 uppercase cursor-pointer " onClick={() => router.push(`/products/${item.variant.productId}`)}>
                                                                 {product.name}
                                                             </h3>
 
@@ -212,12 +212,13 @@ export default function ShoppingCart() {
 
                                                             <div className="md:hidden">
                                                                 <div className="text-red-600 text-xl font-semibold mb-1">
-                                                                    {formatPrice(discountedPrice)}
+                                                                    {formatPrice((discountedPrice ?? product.price) + (variant?.additionalPrice ?? 0))}
                                                                 </div>
                                                                 <div className="text-sm text-gray-500 line-through">
-                                                                    M.R.P.: {formatPrice(product.price)}
+                                                                    M.R.P.: {formatPrice(product.price + (variant?.additionalPrice ?? 0))}
                                                                 </div>
                                                             </div>
+
 
                                                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                                                                 <span className="text-sm text-gray-600 uppercase">
@@ -256,15 +257,15 @@ export default function ShoppingCart() {
 
                                                             </div>
                                                         </div>
-
                                                         <div className="text-right hidden md:block">
                                                             <div className="text-red-600 text-xl font-semibold mb-1">
-                                                                {formatPrice(discountedPrice)}
+                                                                {formatPrice((discountedPrice ?? product.price) + (variant?.additionalPrice ?? 0))}
                                                             </div>
                                                             <div className="text-sm text-gray-500 line-through">
-                                                                M.R.P.: {formatPrice(product.price)}
+                                                                M.R.P.: {formatPrice(product.price + (variant?.additionalPrice ?? 0))}
                                                             </div>
                                                         </div>
+
                                                     </div>
                                                 </div>
                                             );

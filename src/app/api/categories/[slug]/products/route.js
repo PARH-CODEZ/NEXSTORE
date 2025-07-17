@@ -118,6 +118,7 @@ export async function POST(req, { params }) {
         name: true,
         price: true,
         discountPercent: true,
+        stockAvailable: true,
         images: {
           take: 1,
           select: { imageUrl: true },
@@ -132,6 +133,7 @@ export async function POST(req, { params }) {
           take: 1,
           select: {
             id: true,
+            additionalPrice: true,
             images: {
               take: 1,
               select: { imageUrl: true },
@@ -164,6 +166,7 @@ export async function POST(req, { params }) {
           name: true,
           price: true,
           discountPercent: true,
+          stockAvailable: true,
           images: {
             take: 1,
             select: { imageUrl: true },
@@ -177,7 +180,8 @@ export async function POST(req, { params }) {
           variants: {
             take: 1,
             select: {
-               id: true,     
+              id: true,
+              additionalPrice: true,
               images: {
                 take: 1,
                 select: { imageUrl: true },
@@ -212,28 +216,6 @@ export async function POST(req, { params }) {
       distinct: ['name'],
     });
 
-    const specResults = await prisma.productSpecification.findMany({
-      where: {
-        product: {
-          categoryId: category.CategoryID,
-          isActive: true,
-          isApproved: true,
-        },
-      },
-      select: { label: true, value: true },
-      distinct: ['label', 'value'],
-    });
-
-    const specMap = {};
-    for (const { label, value } of specResults) {
-      if (!specMap[label]) specMap[label] = new Set();
-      specMap[label].add(value);
-    }
-
-    const specifications = Object.entries(specMap).map(([label, values]) => [
-      label,
-      Array.from(values),
-    ]);
 
     const attrRows = await prisma.variantAttributeValue.findMany({
       where: {
@@ -278,7 +260,6 @@ export async function POST(req, { params }) {
       totalProducts: highlightedProduct ? totalProducts + 1 : totalProducts,
       products,
       brands,
-      specifications,
       attributes,
       maxPrice: maxPriceLimit,
     });

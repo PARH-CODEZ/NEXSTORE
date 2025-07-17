@@ -93,7 +93,7 @@ const ProductCard = ({ products = [] }) => {
         return;
       }
 
-      if(res.status === 400){
+      if (res.status === 400) {
         toast.error("MAX QTY REACHED")
       }
 
@@ -164,19 +164,38 @@ const ProductCard = ({ products = [] }) => {
                       {product.purchaseCount || 500}+ bought in past month
                     </div>
 
-                    <div className="flex items-baseline gap-2 mb-3">
-                      <span className="text-2xl font-medium text-gray-900">
-                        {formatPrice(getDiscountedPrice(product.price, product.discountPercent))}
-                      </span>
+                    {product.stockAvailable && (
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-2xl font-medium text-gray-900">
+                          {formatPrice(
+                            getDiscountedPrice(product.price, product.discountPercent) +
+                            Number(product.variants?.[0]?.additionalPrice ?? 0)
+                          )}
+                        </span>
 
-                      <span className="text-sm text-gray-500">
-                        M.R.P: <span className="line-through">{formatPrice(product.mrp || product.price)}</span>
-                      </span>
-                      <span className="text-sm text-gray-900">
-                        ({Math.round(product.discountPercent || 0)}% off)
+                        <span className="text-sm text-gray-500">
+                          M.R.P:{' '}
+                          <span className="line-through">
+                            {formatPrice(
+                              Number(product.mrp || product.price) +
+                              Number(product.variants?.[0]?.additionalPrice ?? 0)
+                            )}
+                          </span>
+                        </span>
 
-                      </span>
-                    </div>
+
+
+                        <span className="text-sm text-gray-900">
+                          ({Math.round(product.discountPercent || 0)}% off)
+                        </span>
+                      </div>
+                    )}
+                    {!product.stockAvailable && (
+                      <div className="text-base font-medium text-red-600 mb-3 uppercase">
+                        Currently unavailable
+                      </div>
+                    )}
+
 
                     <div className="text-sm text-gray-600 mb-3 uppercase">
                       Save extra with No Cost EMI
@@ -202,20 +221,27 @@ const ProductCard = ({ products = [] }) => {
                       Service: Installation
                     </div>
                     <button
+                      disabled={!product.stockAvailable}
                       onClick={(e) => handleAddToCart(e, product.variants?.[0]?.id)}
-                      className={` px-12 py-2 text-sm font-medium uppercase rounded-sm transition-transform duration-300
-    ${successId === product.variants?.[0]?.id
-                          ? 'bg-blue-500 text-white scale-95'
-                          : errorId === product.variants?.[0]?.id
-                            ? 'bg-red-500 text-white scale-95'
-                            : 'bg-yellow-400 hover:bg-yellow-500 text-black'}`}
+                      className={`px-12 py-2 text-sm font-medium uppercase rounded-sm transition-transform duration-300
+    ${!product.stockAvailable
+                          ? 'bg-gray-400 text-white cursor-not-allowed'
+                          : successId === product.variants?.[0]?.id
+                            ? 'bg-blue-500 text-white scale-95'
+                            : errorId === product.variants?.[0]?.id
+                              ? 'bg-red-500 text-white scale-95'
+                              : 'bg-yellow-400 hover:bg-yellow-500 text-black'
+                        }`}
                     >
-                      {successId === product.variants?.[0]?.id
-                        ? '✓ Added to cart'
-                        : errorId === product.variants?.[0]?.id
-                          ? '✕ Failed'
-                          : 'Add to cart'}
+                      {!product.stockAvailable
+                        ? 'Currently unavailable'
+                        : successId === product.variants?.[0]?.id
+                          ? '✓ Added to cart'
+                          : errorId === product.variants?.[0]?.id
+                            ? '✕ Failed'
+                            : 'Add to cart'}
                     </button>
+
 
 
 
@@ -267,18 +293,35 @@ const ProductCard = ({ products = [] }) => {
                       {product.purchaseCount || 500}+ bought in past month
                     </div>
 
-                    <div className="flex items-baseline gap-1 mb-2">
-                      <span className="text-lg font-medium text-gray-900">
-                        {formatPrice(getDiscountedPrice(product.price, product.discountPercent))}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        M.R.P: <span className="line-through">{formatPrice(product.mrp || product.price)}</span>
-                      </span>
-                      <span className="text-xs text-gray-900">
-                        ({Math.round(product.discountPercent || 0)}% off)
+                    {product.stockAvailable ? (
+                      <div className="flex items-baseline gap-1 mb-2">
+                        <span className="text-lg font-medium text-gray-900">
+                          {formatPrice(
+                            getDiscountedPrice(product.price, product.discountPercent) +
+                            Number(product.variants?.[0]?.additionalPrice ?? 0)
+                          )}
+                        </span>
 
-                      </span>
-                    </div>
+                        <span className="text-sm text-gray-500">
+                          M.R.P:{' '}
+                          <span className="line-through">
+                            {formatPrice(
+                              Number(product.mrp ?? product.price) +
+                              Number(product.variants?.[0]?.additionalPrice ?? 0)
+                            )}
+                          </span>
+                        </span>
+
+                        <span className="text-xs text-gray-900">
+                          ({Math.round(product.discountPercent || 0)}% off)
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-red-600 font-semibold mb-2 uppercase">
+                        Currently unavailable
+                      </div>
+                    )}
+
 
 
                     <div className="flex items-center gap-2 mb-2">
@@ -304,20 +347,25 @@ const ProductCard = ({ products = [] }) => {
 
                 <div className="mt-3 flex justify-center items-center">
                   <button
+                    disabled={!product.stockAvailable}
                     onClick={(e) => handleAddToCart(e, product.variants?.[0]?.id)}
                     className={`w-full py-2 text-sm font-medium uppercase rounded-sm transition-transform duration-300 md:w-[80%]
-    ${successId === product.variants?.[0]?.id
-                        ? 'bg-blue-500 text-white scale-95'
-                        : errorId === product.variants?.[0]?.id
-                          ? 'bg-red-500 text-white scale-95'
-                          : 'bg-yellow-400 hover:bg-yellow-500 text-black'
+      ${!product.stockAvailable
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : successId === product.variants?.[0]?.id
+                          ? 'bg-blue-500 text-white scale-95'
+                          : errorId === product.variants?.[0]?.id
+                            ? 'bg-red-500 text-white scale-95'
+                            : 'bg-yellow-400 hover:bg-yellow-500 text-black'
                       }`}
                   >
-                    {successId === product.variants?.[0]?.id
-                      ? '✓ Added to cart'
-                      : errorId === product.variants?.[0]?.id
-                        ? '✕ Failed to add'
-                        : 'Add to cart'}
+                    {!product.stockAvailable
+                      ? 'Currently unavailable'
+                      : successId === product.variants?.[0]?.id
+                        ? '✓ Added to cart'
+                        : errorId === product.variants?.[0]?.id
+                          ? '✕ Failed to add'
+                          : 'Add to cart'}
                   </button>
 
                 </div>

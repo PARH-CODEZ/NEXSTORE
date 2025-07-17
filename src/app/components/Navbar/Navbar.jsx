@@ -5,7 +5,7 @@ import FullScreenLoader from '../FullScreenLoader/FullScreenLoader';
 import MobileSidebar from '../MobileSidebar/MobileSidebar';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { Search,MapPin, ShoppingCart, Globe, User} from 'lucide-react';
+import { Search, MapPin, ShoppingCart, Globe, User } from 'lucide-react';
 import AccountModal from '../AccountModal/AccountModal';
 import Link from 'next/link';
 
@@ -45,11 +45,10 @@ const Navbar = ({ notFixed = false }) => {
                         setDefaultPostalCode(def.PostalCode);
                     }
                 } else {
-                    toast.error(data.error || 'Failed to load addresses');
+
                 }
             } catch (err) {
                 console.error('Fetch error:', err);
-                toast.error('Address fetch failed');
             } finally {
                 setLoading(false);
             }

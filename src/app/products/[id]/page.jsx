@@ -430,12 +430,22 @@ const Productpage = () => {
                             ({Math.round(product.discountPercent)}%)
                           </span>
                           <span className="text-3xl font-semibold text-gray-900">
-                            ₹{Math.round(product.price - (product.price * product.discountPercent / 100)).toLocaleString('en-IN')}
+                            ₹{Math.round(
+                              Number(product.price) - (Number(product.price) * Number(product.discountPercent) / 100)
+                              + Number(selectedVariant?.additionalPrice ?? 0)
+                            ).toLocaleString('en-IN')}
                           </span>
+
                         </div>
                         <div className="text-sm text-gray-600 mb-1">
                           <span>M.R.P.: </span>
-                          <span className="line-through">{product.price}</span>
+                          <span className="line-through">
+                            ₹{(
+                              Number(product.price) +
+                              Number(selectedVariant?.additionalPrice ?? 0)
+                            ).toLocaleString('en-IN')}
+                          </span>
+
                         </div>
                         <div className="text-sm text-gray-600 mb-2">Inclusive of all taxes</div>
                         <div className="text-sm">

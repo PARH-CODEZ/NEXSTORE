@@ -28,6 +28,7 @@ export default function ProductsPage() {
 
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
+        console.log(data)
         setProducts(data.products || []);
         setTotalRevenue(data.stats.totalRevenue || 0)
         setTotalSales(data.stats.totalSales || 0)

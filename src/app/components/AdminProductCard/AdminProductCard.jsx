@@ -72,7 +72,7 @@ const ProductCard = ({ products = [], onUpdate }) => {
     const handleDelete = async (productId) => {
         if (!confirm('CONFIRM DELETE PRODUCT ?')) return;
         try {
-            const res = await fetch(`/api/products?id=${id}`, {
+            const res = await fetch(`/api/products?id=${productId}`, {
                 method: 'DELETE',
             });
             if (!res.ok) throw new Error('Failed to delete');
@@ -162,16 +162,21 @@ const ProductCard = ({ products = [], onUpdate }) => {
 
                                 <div className="flex items-baseline gap-2 mb-2">
                                     <span className="text-xl font-semibold text-gray-900">
-                                        {formatPrice(discountedPrice)}
+                                        {formatPrice(
+                                            (p.price - (p.price * (p.discountPercent || 0)) / 100) +
+                                            Number(p.variants?.[0]?.additionalPrice ?? 0)
+                                        )}
                                     </span>
                                     <span className="line-through text-gray-500 text-sm">
-                                        {formatPrice(p.mrp || p.price)}
+                                        {formatPrice(
+                                            Number(p.mrp || p.price) + Number(p.variants?.[0]?.additionalPrice ?? 0)
+                                        )}
                                     </span>
                                     <span className="text-sm text-green-600">
                                         ({Math.round(p.discountPercent || 0)}% off)
                                     </span>
                                 </div>
-
+                                
                                 <div className="flex flex-wrap gap-2 text-xs mt-3">
                                     <div className="border border-gray-300 bg-gray-100 px-2 py-1">
                                         SALES: <span className="font-semibold">{p.unitsSold}</span>

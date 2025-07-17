@@ -29,7 +29,7 @@ export async function POST(req) {
         reviews: { select: { rating: true } },
         variants: {
           take: 1,
-          select: { images: { take: 1, select: { imageUrl: true } } },
+          select: {additionalPrice:true,images: { take: 1, select: { imageUrl: true } } },
         },
         _count: { select: { reviews: true, variants: true } },
       },

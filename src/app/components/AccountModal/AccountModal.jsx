@@ -92,11 +92,17 @@ const AccountModal = ({
                     YOUR ACCOUNT
                   </button>
                 </li>
-                <li>
-                  <button onClick={() => router.push('/orders')} className="block text-left w-full text-gray-700 hover:underline hover:text-gray-900">
-                    YOUR ORDERS
-                  </button>
-                </li>
+                {user?.role === 'seller' && (
+                  <li>
+                    <button
+                      onClick={() => router.push('/manageproducts')}
+                      className="block text-left w-full text-gray-700 hover:underline hover:text-gray-900"
+                    >
+                      YOUR PRODUCTS
+                    </button>
+                  </li>
+                )}
+
                 <li>
                   <button onClick={() => router.push('/wishlist')} className="block text-left w-full text-gray-700 hover:underline hover:text-gray-900">
                     YOUR WISH LIST
