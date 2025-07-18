@@ -19,37 +19,48 @@ export default function ShoppingCart() {
 
 
 
+    useEffect(() => {
+        const localItems = JSON.parse(localStorage.getItem('checkoutItems') || '[]');
+        console.log('Selected Items from localStorage:', localItems);
+    }, [selected]);
 
     const fetchCart = async () => {
         try {
-
-            setLoading(true)
+            setLoading(true);
             const res = await fetch('/api/cart', {
                 method: 'GET',
                 credentials: 'include',
             });
 
             const data = await res.json();
-            console.log(data)
             if (!res.ok || !data.items || data.items.length === 0) {
                 setEmpty(true);
+                localStorage.removeItem('checkoutItems');
             } else {
                 setCartItems(data.items);
+
+                // ✅ Create selected map
                 const qtyMap = {};
                 const selectedMap = {};
                 data.items.forEach((item) => {
                     qtyMap[item.id] = item.quantity;
-                    selectedMap[item.id] = true;
+                    selectedMap[item.id] = true; // default: selected
                 });
                 setQuantities(qtyMap);
                 setSelected(selectedMap);
-                setLoading(false)
+
+                // ✅ Filter selected items
+                const selectedItems = data.items.filter((item) => selectedMap[item.id]);
+                localStorage.setItem('checkoutItems', JSON.stringify(selectedItems));
+
+                setLoading(false);
             }
         } catch (error) {
             console.error('Error loading cart:', error);
             setEmpty(true);
         }
     };
+
     useEffect(() => {
         if (!user || user.role !== 'customer') {
             setEmpty(true);
@@ -59,6 +70,20 @@ export default function ShoppingCart() {
 
         fetchCart();
     }, [user]);
+
+    const handleProceedToBuy = () => {
+        const selectedItems = cartItems.filter((item) => selected[item.id]);
+
+        if (selectedItems.length === 0) {
+            toast.info("PLEASE SELECT AT LEAST ONE ITEM.");
+            return;
+        }
+
+        localStorage.setItem("checkoutItems", JSON.stringify(selectedItems));
+        localStorage.setItem("checkoutSource", "cart");
+
+        router.push("/checkout");
+    };
 
     const updateQuantity = async (itemId, change) => {
         const newQty = Math.max(1, (quantities[itemId] || 1) + change);
@@ -187,14 +212,20 @@ export default function ShoppingCart() {
                                                             <input
                                                                 type="checkbox"
                                                                 checked={!!selected[item.id]}
-                                                                onChange={(e) =>
-                                                                    setSelected((prev) => ({
-                                                                        ...prev,
+                                                                onChange={(e) => {
+                                                                    const newSelected = {
+                                                                        ...selected,
                                                                         [item.id]: e.target.checked,
-                                                                    }))
-                                                                }
+                                                                    };
+                                                                    setSelected(newSelected);
+
+                                                                    // ✅ Store only selected items in localStorage
+                                                                    const selectedItems = cartItems.filter((cartItem) => newSelected[cartItem.id]);
+                                                                    localStorage.setItem('checkoutItems', JSON.stringify(selectedItems));
+                                                                }}
                                                                 className="mt-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                                             />
+
 
                                                             <img
                                                                 src={item.variant.images?.[0]?.imageUrl || '/placeholder.jpg'}
@@ -212,11 +243,17 @@ export default function ShoppingCart() {
 
                                                             <div className="md:hidden">
                                                                 <div className="text-red-600 text-xl font-semibold mb-1">
-                                                                    {formatPrice((discountedPrice ?? product.price) + (variant?.additionalPrice ?? 0))}
+                                                                    {formatPrice(
+                                                                        Number(discountedPrice ?? product.price) + Number(item.variant?.additionalPrice ?? 0)
+                                                                    )}
                                                                 </div>
                                                                 <div className="text-sm text-gray-500 line-through">
-                                                                    M.R.P.: {formatPrice(product.price + (variant?.additionalPrice ?? 0))}
+                                                                    M.R.P.:{" "}
+                                                                    {formatPrice(
+                                                                        Number(product.price) + Number(item.variant?.additionalPrice ?? 0)
+                                                                    )}
                                                                 </div>
+
                                                             </div>
 
 
@@ -259,11 +296,17 @@ export default function ShoppingCart() {
                                                         </div>
                                                         <div className="text-right hidden md:block">
                                                             <div className="text-red-600 text-xl font-semibold mb-1">
-                                                                {formatPrice((discountedPrice ?? product.price) + (variant?.additionalPrice ?? 0))}
+                                                                {formatPrice(
+                                                                    Number(discountedPrice ?? product.price) + Number(item.variant?.additionalPrice ?? 0)
+                                                                )}
                                                             </div>
                                                             <div className="text-sm text-gray-500 line-through">
-                                                                M.R.P.: {formatPrice(product.price + (variant?.additionalPrice ?? 0))}
+                                                                M.R.P.:{" "}
+                                                                {formatPrice(
+                                                                    Number(product.price) + Number(item.variant?.additionalPrice ?? 0)
+                                                                )}
                                                             </div>
+
                                                         </div>
 
                                                     </div>
@@ -305,9 +348,13 @@ export default function ShoppingCart() {
                                             <span className="text-xs text-gray-600 uppercase">This order contains a gift</span>
                                         </div>
 
-                                        <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-3 px-4 rounded-sm mb-4">
+                                        <button
+                                            onClick={handleProceedToBuy}
+                                            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-3 px-4 rounded-sm mb-4"
+                                        >
                                             PROCEED TO BUY
                                         </button>
+
                                     </div>
                                 </div>
                             </div>
