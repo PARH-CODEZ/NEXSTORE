@@ -1,4 +1,3 @@
-
 // /app/api/cart/route.js
 
 import { NextResponse } from 'next/server'
@@ -11,23 +10,29 @@ export async function GET(req) {
     if (!user || user.role !== 'customer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
     const cart = await prisma.cart.findUnique({
       where: { userId: user.userid },
       include: {
         items: {
           include: {
             variant: {
-              include: {
+              select: {
+                id: true,
+                variantName: true, // ✅ Correct field from your model
+                additionalPrice: true,
+                images: { take: 1, select: { imageUrl: true } },
                 product: {
                   select: {
+                    id: true,
                     name: true,
+                    slug: true,
                     price: true,
                     discountPercent: true,
-                    stockAvailable: true, // 👈 include this
+                    stockAvailable: true,
                     images: { take: 1, select: { imageUrl: true } },
                   },
                 },
-                images: { take: 1, select: { imageUrl: true } },
               },
             },
           },

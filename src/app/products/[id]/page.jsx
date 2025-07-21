@@ -46,6 +46,20 @@ const Productpage = () => {
   const [reviewAdded, setReviewAdded] = useState(false);
   const [notFound, setNotFound] = useState(false)
 
+  const eligibleCategories = ['mobiles', 'electronics', 'washing-machines', 'acs', 'laptops'];
+  const slug = product?.category?.Slug?.toLowerCase?.();
+  const eligible = slug && eligibleCategories.includes(slug);
+
+
+
+  useEffect(() => {
+    if (!eligible && exchangeOption === 'with') {
+      setExchangeOption('without');
+    }
+    console.log(exchangeOption)
+  }, [exchangeOption]);
+
+
   const handleReviewAdded = () => {
     setReviewAdded(true);
   };
@@ -106,6 +120,7 @@ const Productpage = () => {
         SetSeller(productData.sellerName);
         setAttributeValues(productData?.variantData?.attributeValues || []);
         setPrimaryAttribute(productData?.variantData?.primaryAttribute || null);
+
 
         // Default select the first value
         if (productData?.variantData?.attributeValues?.length > 0) {
@@ -312,6 +327,7 @@ const Productpage = () => {
 
 
 
+  const protectionPlanPrice = Math.round(product.price * 0.1); // 10% of product price
 
 
 
@@ -582,7 +598,6 @@ const Productpage = () => {
 
 
 
-                      {/* Actions */}
                       <div className='md:hidden mb-4 border-b border-gray-400 pb-8'>
                         <div className="pb-8">
                           <div className="flex items-center justify-between mb-2">
@@ -702,6 +717,39 @@ const Productpage = () => {
                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
                             disabled={!product.stockAvailable}
+                            onClick={() => {
+                              if (!selectedVariant) {
+                                toast.error("Please select a variant first");
+                                return;
+                              }
+                              const protectionPlanCost = protectionPlan ? Math.round(Number(product.price) * 0.1) : 0;
+                              const buyNowItem = {
+                                id: 0,
+                                quantity: 1,
+                                variantId: selectedVariant.id,
+                                variant: {
+                                  id: selectedVariant.id,
+                                  variantName: selectedVariant.variantName,
+                                  additionalPrice: selectedVariant.additionalPrice,
+                                  images: selectedVariant.images,
+                                  productId: product.id,
+                                  product: {
+                                    id: product.id,
+                                    name: product.name,
+                                    slug: product.slug,
+                                    price: Number(product.price) + protectionPlanCost,
+                                    discountPercent: product.discountPercent,
+                                    stockAvailable: product.stockAvailable,
+                                    displayImages: product.displayImages,
+                                  },
+                                },
+                              };
+
+                              localStorage.removeItem("checkoutItems");
+                              localStorage.setItem("buyNowItems", JSON.stringify([buyNowItem]));
+
+                              router.push("/checkout");
+                            }}
                           >
                             Buy Now
                           </button>
@@ -774,26 +822,30 @@ const Productpage = () => {
                   {/*Right hand ActionBar on Larger Screens */}
                   <div className="top-20 flex-col h-[700px] right-6 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10 hidden md:block">
                     {/* Exchange Options */}
-                    <div className="mb-4">
-                      {['mobiles', 'electronics', 'washing-machines', 'acs', 'laptops'].includes(product.category?.Slug) && (
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <span className="font-semibold text-sm uppercase">With Exchange</span>
-                            <div className="text-sm text-orange-600 font-medium">
-                              Up to ₹{Math.round(product.price * (30 / 100)).toLocaleString("en-IN")} off
+                    <div className="pb-8">
+                      {/* With Exchange */}
+                      <div className="flex items-center justify-between mb-2">
+                        {eligible && (
+                          <>
+                            <div>
+                              <span className="font-semibold text-sm uppercase">With Exchange</span>
+                              <div className="text-sm text-orange-600 font-medium">
+                                Up to ₹{Math.round(product.price * 0.3).toLocaleString("en-IN")} off
+                              </div>
                             </div>
-                          </div>
-                          <input
-                            type="radio"
-                            name="exchange"
-                            value="with"
-                            checked={exchangeOption === 'with'}
-                            onChange={(e) => setExchangeOption(e.target.value)}
-                            className="w-4 h-4"
-                          />
-                        </div>
-                      )}
+                            <input
+                              type="radio"
+                              name="exchange"
+                              value="with"
+                              checked={exchangeOption === 'with'}
+                              onChange={(e) => setExchangeOption(e.target.value)}
+                              className="w-4 h-4"
+                            />
+                          </>
+                        )}
+                      </div>
 
+                      {/* Buy New */}
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="font-semibold text-sm uppercase">Buy new:</span>
@@ -811,6 +863,7 @@ const Productpage = () => {
                         />
                       </div>
                     </div>
+
 
 
                     {/* Delivery Info */}
@@ -853,7 +906,7 @@ const Productpage = () => {
                         <div className="text-sm">
                           <div className="text-blue-600 hover:underline cursor-pointer uppercase">Protect+ for  {product.title} (1year)</div>
                           <div className="text-gray-600">(Email Delivery, No Physical Kit)</div>
-                          <div className="font-semibold">For ₹{Math.round(product.price * (10 / 100)).toLocaleString("en-IN")} </div>
+                          <div className="font-semibold">For ₹ {protectionPlanPrice} </div>
                         </div>
                       </div>
                     </div>
@@ -887,13 +940,47 @@ const Productpage = () => {
                       {/* Buy Now */}
                       <button
                         className={`w-full font-medium py-2 px-4 rounded-lg text-sm uppercase
-                           ${!product.stockAvailable
+                     ${!product.stockAvailable
                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
                         disabled={!product.stockAvailable}
+                        onClick={() => {
+                          if (!selectedVariant) {
+                            toast.error("Please select a variant first");
+                            return;
+                          }
+                          const protectionPlanCost = protectionPlan ? Math.round(Number(product.price) * 0.1) : 0;
+                          const buyNowItem = {
+                            id: 0,
+                            quantity: 1,
+                            variantId: selectedVariant.id,
+                            variant: {
+                              id: selectedVariant.id,
+                              variantName: selectedVariant.variantName,
+                              additionalPrice: selectedVariant.additionalPrice,
+                              images: selectedVariant.images,
+                              productId: product.id,
+                              product: {
+                                id: product.id,
+                                name: product.name,
+                                slug: product.slug,
+                                price: Number(product.price) + protectionPlanCost,
+                                discountPercent: product.discountPercent,
+                                stockAvailable: product.stockAvailable,
+                                displayImages: product.displayImages,
+                              },
+                            },
+                          };
+
+                          localStorage.removeItem("checkoutItems");
+                          localStorage.setItem("buyNowItems", JSON.stringify([buyNowItem]));
+
+                          router.push("/checkout");
+                        }}
                       >
                         Buy Now
                       </button>
+
 
                       {/* Gift options */}
                       <div className="flex items-center space-x-2">

@@ -6,7 +6,11 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 
+import { loadStripe } from '@stripe/stripe-js';
+
 const CheckoutUI = () => {
+
+    const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
     const router = useRouter();
     const user = useSelector((state) => state.user.user)
     const [items, setItems] = useState([]);
@@ -17,6 +21,15 @@ const CheckoutUI = () => {
     const [selectedPayment, setSelectedPayment] = useState('card');
     const [addresses, setAddresses] = useState([]);
     const [selectedAddress, setSelectedAddress] = useState(null);
+
+
+    useEffect(() => {
+        if (!user) {
+            router.push("/login")
+            return
+        }
+
+    })
 
 
     useEffect(() => {
@@ -31,14 +44,10 @@ const CheckoutUI = () => {
 
     useEffect(() => {
 
-        const buyNowData = localStorage.getItem('buyNowItem');
+
+        const buyNowData = localStorage.getItem('buyNowItems');
         const checkoutData = localStorage.getItem('checkoutItems');
 
-        
-        if (!checkoutData && !buyNowData) {
-            router.replace('/cart');
-            return;
-        }
         let parsed = [];
 
         if (buyNowData) {
@@ -135,13 +144,14 @@ const CheckoutUI = () => {
 
     const paymentMethods = [
         { id: 'card', label: 'Credit or debit card', icon: CreditCard },
-        { id: 'netbanking', label: 'Net Banking', icon: Building },
-        { id: 'upi', label: 'UPI Apps', icon: Smartphone },
-        { id: 'emi', label: 'EMI', icon: Calendar },
         { id: 'cod', label: 'Cash on Delivery / Pay on Delivery', icon: Truck },
     ];
 
+
+
+
     const handlePayment = async () => {
+        setLoading(true)
         const selectedItems = items.filter((item) => selected[item.id]);
 
         console.log('Checkout Items:', selectedItems);
@@ -157,6 +167,7 @@ const CheckoutUI = () => {
             return;
         }
 
+        // Cash on Delivery (COD) logic
         if (selectedPayment === 'cod') {
             try {
                 const res = await fetch('/api/checkout/cod', {
@@ -183,70 +194,41 @@ const CheckoutUI = () => {
             return;
         }
 
-        // Razorpay logic
+        // Stripe Checkout logic
         try {
-            const res = await fetch('/api/checkout', {
+            const stripe = await stripePromise;
+            if (!stripe) {
+                throw new Error("Stripe failed to load.");
+            }
+
+            const res = await fetch('/api/checkout/stripe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     items: selectedItems,
                     addressId: selectedAddress.AddressID,
+                    userId: user?.id, // optional if you want to track user
                 }),
             });
 
-            const { razorpayOrder, orderId } = await res.json();
+            const { sessionId } = await res.json();
+            console.log("Stripe Session ID:", sessionId);
 
-            const razorpay = new window.Razorpay({
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-                amount: razorpayOrder.amount,
-                currency: razorpayOrder.currency,
-                order_id: razorpayOrder.id,
-                name: 'Nexstore',
-                description: 'Order Payment',
-                handler: async function (response) {
-                    await fetch('/api/checkout/verify', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_signature: response.razorpay_signature,
-                            orderId,
-                        }),
-                    });
 
-                    alert('Payment Successful!');
-                    localStorage.removeItem("checkoutItems");
-                    localStorage.removeItem("checkoutSource");
-                    router.push("/orders");
-                },
-                prefill: {
-                    name: user?.name || 'Guest',
-                    email: user?.email || '',
-                    contact: user?.phone || '',
-                },
-                notes: {
-                    paymentMethod: selectedPayment,
-                },
-                theme: {
-                    color: '#FACC15',
-                },
-                method: {
-                    card: true,
-                    netbanking: true,
-                    upi: true,
-                    wallet: true,
-                    emi: true,
-                },
-            });
+            const result = await stripe.redirectToCheckout({ sessionId });
 
-            razorpay.open();
+            if (result.error) {
+                console.error(result.error.message);
+                toast.error("Stripe redirect failed");
+            }
         } catch (err) {
             console.error(err);
             alert('Payment Failed!');
+        } finally {
+            setLoading(false);
         }
-    };
 
+    };
 
 
 
@@ -263,9 +245,28 @@ const CheckoutUI = () => {
 
     const subtotal = items.reduce((sum, item) => {
         const qty = quantities[item.id] || 1;
-        const discounted = getDiscountedPrice(item.variant.product.price, item.variant.product.discountPercent);
-        return sum + qty * discounted;
+        const price = Number(item.variant.product.price);
+        const discount = Number(item.variant.product.discountPercent || 0);
+        const additional = Number(item.variant.additionalPrice || 0);
+
+        const discounted = getDiscountedPrice(price, discount);
+        const finalPrice = discounted + additional;
+
+        return sum + qty * finalPrice;
     }, 0);
+
+
+    const DELIVERY_CHARGE = 40;
+    const isEligibleForFreeDelivery = subtotal >= 400;
+    const deliveryCharge = isEligibleForFreeDelivery ? 0 : DELIVERY_CHARGE;
+    const finalTotal = subtotal + deliveryCharge;
+
+    const updatedPaymentMethods = paymentMethods.map((method) => {
+        if (method.id === 'cod') {
+            return { ...method, disabled: subtotal > 10000 };
+        }
+        return { ...method, disabled: false };
+    });
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -397,7 +398,7 @@ const CheckoutUI = () => {
 
                                                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                                                             <span className="text-sm text-gray-600 uppercase">
-                                                                Variant: {item.variant.valueSummary || 'Default'}
+                                                                Variant: {item.variant.variantName}
                                                             </span>
                                                         </div>
 
@@ -468,58 +469,129 @@ const CheckoutUI = () => {
 
 
 
-                            <div className="bg-white rounded-lg shadow-sm p-6">
+                            <div className="bg-white rounded-lg shadow-sm p-6 uppercase">
                                 <h2 className="text-lg font-medium text-gray-900 mb-6">Payment method</h2>
                                 <div className="space-y-3 mb-6">
-                                    {paymentMethods.map((method) => (
+                                    {updatedPaymentMethods.map((method) => (
                                         <button
                                             key={method.id}
                                             onClick={() => !method.disabled && setSelectedPayment(method.id)}
-                                            className={`flex items-center gap-2 w-full px-4 py-2 rounded-md border text-left ${selectedPayment === method.id ? 'border-yellow-500 bg-yellow-100' : 'border-gray-300'} ${method.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`flex items-center gap-2 w-full px-4 py-2 rounded-md border uppercase text-left 
+                                            ${selectedPayment === method.id ? 'border-yellow-500 bg-yellow-100' : 'border-gray-300'} 
+                                             ${method.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            disabled={method.disabled}
                                         >
                                             {method.icon && <method.icon size={18} />} {method.label}
+                                            {method.id === 'cod' && method.disabled && (
+                                                <span className="text-xs text-red-500 ml-2">(Unavailable above ₹10,000)</span>
+                                            )}
                                         </button>
                                     ))}
+
                                 </div>
                                 <button
                                     onClick={handlePayment}
-                                    className="w-full sm:w-auto px-6 py-3 bg-yellow-400 text-gray-900 rounded-md hover:bg-yellow-500 transition-colors font-medium"
+                                    disabled={loading}
+                                    className={`relative w-full sm:w-auto px-6 py-3 rounded-md transition-colors font-medium uppercase flex items-center justify-center
+    ${loading ? 'bg-yellow-300 text-gray-700 cursor-not-allowed' : 'bg-yellow-400 text-gray-900 hover:bg-yellow-500'}`}
                                 >
-                                    {selectedPayment === 'cod' ? 'Place Order (COD)' : 'Pay with Razorpay'}
+                                    {loading ? (
+                                        <>
+                                            <svg
+                                                className="animate-spin h-5 w-5 mr-2 text-gray-700"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                />
+                                            </svg>
+                                            {selectedPayment === 'cod' ? 'Placing Order...' : 'Processing...'}
+                                        </>
+                                    ) : (
+                                        selectedPayment === 'cod' ? 'Place Order (COD)' : 'Pay with Stripe'
+                                    )}
                                 </button>
+
                             </div>
                         </div>
 
-                        <div className="lg:col-span-1">
+                        <div className="lg:col-span-1 uppercase">
                             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
                                 <button
                                     onClick={handlePayment}
-                                    className="w-full mb-6 px-6 py-3 bg-yellow-400 text-gray-900 rounded-md hover:bg-yellow-500 transition-colors font-medium"
+                                    disabled={loading}
+                                    className={`w-full mb-6 px-6 py-3 rounded-md transition-colors font-medium uppercase flex items-center justify-center
+                                   ${loading ? 'bg-yellow-300 text-gray-700 cursor-not-allowed' : 'bg-yellow-400 text-gray-900 hover:bg-yellow-500'}`}
                                 >
-                                    {selectedPayment === 'cod' ? 'Place Order (COD)' : 'Pay with Razorpay'}
+                                    {loading ? (
+                                        <>
+                                            <svg
+                                                className="animate-spin h-5 w-5 mr-2 text-gray-700"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                />
+                                            </svg>
+                                            {selectedPayment === 'cod' ? 'Placing Order...' : 'Processing...'}
+                                        </>
+                                    ) : (
+                                        selectedPayment === 'cod' ? 'Place Order (COD)' : 'Pay with Stripe'
+                                    )}
                                 </button>
+
 
                                 <div className="space-y-3 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Items:</span>
-                                        <span className="text-gray-900">₹64,998.00</span>
+                                        <span className="text-gray-900">{formatPrice(subtotal)}</span>
                                     </div>
+
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Delivery:</span>
-                                        <span className="text-gray-900">₹40.00</span>
+                                        <span className="text-gray-900">{subtotal > 400 ? '₹0.00' : '₹40.00'}</span>
                                     </div>
+
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Total:</span>
-                                        <span className="text-gray-900">₹65,038.00</span>
+                                        <span className="text-gray-900">{formatPrice(subtotal + (subtotal > 400 ? 0 : 40))}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Promotion Applied:</span>
-                                        <span className="text-red-600">-₹40.00</span>
-                                    </div>
+
+                                    {subtotal > 400 && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Promotion Applied:</span>
+                                            <span className="text-red-600">-₹40.00</span>
+                                        </div>
+                                    )}
+
                                     <div className="border-t pt-3 mt-3">
                                         <div className="flex justify-between font-medium text-lg">
                                             <span className="text-gray-900">Order Total:</span>
-                                            <span className="text-red-600">₹64,998.00</span>
+                                            <span className="text-red-600">{formatPrice(subtotal + (subtotal > 400 ? 0 : 40))}</span>
                                         </div>
                                     </div>
                                 </div>

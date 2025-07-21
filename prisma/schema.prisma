@@ -16,9 +16,8 @@ model User {
   Role             String
   IsActive         Boolean         @default(true)
   CreatedAt        DateTime        @default(now())
-  ordersAsSeller   Order[]         @relation("SellerOrders")
+  cart             Cart?           @relation("UserCart")
   ordersAsCustomer Order[]         @relation("CustomerOrders")
-  cart             Cart[]          @relation("UserCart")
   reviews          ProductReview[]
 }
 
@@ -39,26 +38,24 @@ model UserAddress {
 }
 
 model Cart {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user  User       @relation("UserCart", fields: [userId], references: [UserID])
-  items CartItem[]
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation("UserCart", fields: [userId], references: [UserID])
+  items     CartItem[]
 }
 
 model CartItem {
-  id        Int      @id @default(autoincrement())
+  id        Int            @id @default(autoincrement())
   cartId    Int
   variantId Int
-  quantity  Int      @default(1)
-  addedAt   DateTime @default(now())
+  quantity  Int            @default(1)
+  addedAt   DateTime       @default(now())
+  cart      Cart           @relation(fields: [cartId], references: [id])
+  variant   ProductVariant @relation("VariantCart", fields: [variantId], references: [id])
 
-  cart    Cart           @relation(fields: [cartId], references: [id])
-  variant ProductVariant @relation("VariantCart", fields: [variantId], references: [id])
-
-  @@unique([cartId, variantId]) // Prevent duplicate variants in cart
+  @@unique([cartId, variantId])
 }
 
 model SellerProfile {
@@ -147,11 +144,11 @@ model ProductVariant {
   quantityAvailable Int                          @default(0)
   isActive          Boolean                      @default(true)
   createdAt         DateTime                     @default(now())
+  cartItems         CartItem[]                   @relation("VariantCart")
   OrderItem         OrderItem[]
   images            ProductImage[]               @relation("VariantImages")
   product           Product                      @relation(fields: [productId], references: [id])
   attributeMapping  ProductVariantAttributeMap[]
-  cartItems         CartItem[]                   @relation("VariantCart") // 🔥 Added
 
   @@index([productId])
 }
@@ -213,7 +210,6 @@ model OrderStatusHistory {
 model Order {
   id                Int                  @id @default(autoincrement())
   userId            Int
-  sellerId          Int?
   shippingAddressId Int
   billingAddressId  Int
   status            OrderStatus          @default(PENDING)
@@ -229,7 +225,6 @@ model Order {
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
   billingAddress    OrderAddress         @relation("BillingAddressRelation", fields: [billingAddressId], references: [id])
-  seller            User?                @relation("SellerOrders", fields: [sellerId], references: [UserID])
   shippingAddress   OrderAddress         @relation("ShippingAddressRelation", fields: [shippingAddressId], references: [id])
   customer          User                 @relation("CustomerOrders", fields: [userId], references: [UserID])
   items             OrderItem[]
@@ -245,6 +240,7 @@ model OrderItem {
   quantity   Int
   price      Decimal        @db.Decimal(18, 2)
   totalPrice Decimal        @db.Decimal(18, 2)
+  sellerId   Int?
   order      Order          @relation(fields: [orderId], references: [id])
   variant    ProductVariant @relation(fields: [variantId], references: [id])
 }
@@ -262,20 +258,17 @@ model Shipment {
 }
 
 model Payment {
-  id Int @id @default(autoincrement())
-  orderId Int
-  order   Order @relation(fields: [orderId], references: [id])
-  // Razorpay or other gateway info
+  id              Int           @id @default(autoincrement())
+  orderId         Int
   amount          Decimal       @db.Decimal(18, 2)
-  status          PaymentStatus @default(PENDING) // Enum: PENDING, SUCCESS, FAILED
-  method          String? // e.g., "razorpay", "card", "upi", "netbanking"
-  transactionId   String? // razorpay_payment_id or any unique txn id from the gateway
-  providerOrderId String? // e.g., razorpay_order_id (useful for troubleshooting)
-
-  paidAt DateTime? // Filled only when status is SUCCESS
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status          PaymentStatus @default(PENDING)
+  method          String?
+  transactionId   String?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  providerOrderId String?
+  updatedAt       DateTime      @updatedAt
+  order           Order         @relation(fields: [orderId], references: [id])
 }
 
 model OrderAddress {

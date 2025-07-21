@@ -256,12 +256,10 @@ export default function ShoppingCart() {
 
                                                             </div>
 
+                                                            <span className="text-sm text-gray-600 uppercase mb-8">
+                                                                Variant: {item.variant.variantName || 'Default'}
+                                                            </span>
 
-                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                                                                <span className="text-sm text-gray-600 uppercase">
-                                                                    Variant: {item.variant.valueSummary || 'Default'}
-                                                                </span>
-                                                            </div>
 
                                                             <div className="flex flex-wrap items-center gap-4 mb-4">
                                                                 <div className="flex items-center border border-gray-300 rounded-md">
