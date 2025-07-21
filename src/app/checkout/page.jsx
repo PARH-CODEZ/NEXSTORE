@@ -176,20 +176,23 @@ const CheckoutUI = () => {
                     body: JSON.stringify({
                         items: selectedItems,
                         addressId: selectedAddress.AddressID,
+                        userId: user?.id,
                     }),
                 });
 
                 if (res.ok) {
-                    alert('Order placed with Cash on Delivery!');
+                    toast.success('Order placed with Cash on Delivery!');
                     localStorage.removeItem("checkoutItems");
                     localStorage.removeItem("checkoutSource");
-                    router.push("/orders");
+                   router.push(`/checkout/success?orderId=${data.orderId}`);
                 } else {
                     throw new Error('COD Order Failed');
                 }
             } catch (err) {
                 console.error(err);
                 alert('COD Failed!');
+            } finally {
+                setLoading(false);
             }
             return;
         }
@@ -263,7 +266,7 @@ const CheckoutUI = () => {
 
     const updatedPaymentMethods = paymentMethods.map((method) => {
         if (method.id === 'cod') {
-            return { ...method, disabled: subtotal > 10000 };
+            return { ...method, disabled: subtotal > 1000000 };
         }
         return { ...method, disabled: false };
     });

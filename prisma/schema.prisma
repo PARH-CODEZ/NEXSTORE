@@ -8,17 +8,18 @@ datasource db {
 }
 
 model User {
-  UserID           Int             @id @default(autoincrement())
-  FullName         String
-  Email            String          @unique
-  PasswordHash     String
-  PhoneNumber      String?
-  Role             String
-  IsActive         Boolean         @default(true)
-  CreatedAt        DateTime        @default(now())
-  cart             Cart?           @relation("UserCart")
-  ordersAsCustomer Order[]         @relation("CustomerOrders")
-  reviews          ProductReview[]
+  UserID             Int             @id @default(autoincrement())
+  FullName           String
+  Email              String          @unique
+  PasswordHash       String
+  PhoneNumber        String?
+  Role               String
+  IsActive           Boolean         @default(true)
+  CreatedAt          DateTime        @default(now())
+  ordersAsCustomer   Order[]         @relation("CustomerOrders")
+  cart               Cart[]          @relation("UserCart")
+  reviews            ProductReview[]
+  orderItemsAsSeller OrderItem[]     @relation("SellerOrderItems") // this is correct
 }
 
 model UserAddress {
@@ -38,24 +39,26 @@ model UserAddress {
 }
 
 model Cart {
-  id        Int        @id @default(autoincrement())
-  userId    Int        @unique
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  user      User       @relation("UserCart", fields: [userId], references: [UserID])
-  items     CartItem[]
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User       @relation("UserCart", fields: [userId], references: [UserID])
+  items CartItem[]
 }
 
 model CartItem {
-  id        Int            @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   cartId    Int
   variantId Int
-  quantity  Int            @default(1)
-  addedAt   DateTime       @default(now())
-  cart      Cart           @relation(fields: [cartId], references: [id])
-  variant   ProductVariant @relation("VariantCart", fields: [variantId], references: [id])
+  quantity  Int      @default(1)
+  addedAt   DateTime @default(now())
 
-  @@unique([cartId, variantId])
+  cart    Cart           @relation(fields: [cartId], references: [id])
+  variant ProductVariant @relation("VariantCart", fields: [variantId], references: [id])
+
+  @@unique([cartId, variantId]) // Prevent duplicate variants in cart
 }
 
 model SellerProfile {
@@ -144,11 +147,11 @@ model ProductVariant {
   quantityAvailable Int                          @default(0)
   isActive          Boolean                      @default(true)
   createdAt         DateTime                     @default(now())
-  cartItems         CartItem[]                   @relation("VariantCart")
   OrderItem         OrderItem[]
   images            ProductImage[]               @relation("VariantImages")
   product           Product                      @relation(fields: [productId], references: [id])
   attributeMapping  ProductVariantAttributeMap[]
+  cartItems         CartItem[]                   @relation("VariantCart") // 🔥 Added
 
   @@index([productId])
 }
@@ -234,15 +237,17 @@ model Order {
 }
 
 model OrderItem {
-  id         Int            @id @default(autoincrement())
+  id         Int     @id @default(autoincrement())
   orderId    Int
   variantId  Int
+  sellerId   Int
   quantity   Int
-  price      Decimal        @db.Decimal(18, 2)
-  totalPrice Decimal        @db.Decimal(18, 2)
-  sellerId   Int?
-  order      Order          @relation(fields: [orderId], references: [id])
-  variant    ProductVariant @relation(fields: [variantId], references: [id])
+  price      Decimal @db.Decimal(18, 2)
+  totalPrice Decimal @db.Decimal(18, 2)
+
+  order   Order          @relation(fields: [orderId], references: [id])
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+  seller  User           @relation("SellerOrderItems", fields: [sellerId], references: [UserID])
 }
 
 model Shipment {
@@ -258,17 +263,20 @@ model Shipment {
 }
 
 model Payment {
-  id              Int           @id @default(autoincrement())
-  orderId         Int
+  id      Int   @id @default(autoincrement())
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+
   amount          Decimal       @db.Decimal(18, 2)
-  status          PaymentStatus @default(PENDING)
-  method          String?
-  transactionId   String?
-  paidAt          DateTime?
-  createdAt       DateTime      @default(now())
-  providerOrderId String?
-  updatedAt       DateTime      @updatedAt
-  order           Order         @relation(fields: [orderId], references: [id])
+  status          PaymentStatus @default(PENDING) // Enum: PENDING, SUCCESS, FAILED
+  method          String? // e.g., "card", "wallet", "upi", etc.
+  transactionId   String? // Stripe charge ID or PaymentIntent ID
+  providerOrderId String? // Stripe Checkout Session ID or PaymentIntent ID
+
+  paidAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model OrderAddress {
@@ -311,3 +319,4 @@ enum ShipmentStatus {
   LOST
   RETURNED
 }
+  

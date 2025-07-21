@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import Stripe from "stripe";
 import { Prisma } from "@prisma/client";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-// POST /api/checkout/stripe
+// POST /api/checkout/cod
 export async function POST(req) {
     try {
         const { items, userId, addressId } = await req.json();
@@ -14,7 +11,7 @@ export async function POST(req) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        // 1. Fetch the user’s address from saved addresses
+        // 1. Fetch user address
         const userAddress = await prisma.userAddress.findUnique({
             where: { AddressID: addressId },
         });
@@ -23,7 +20,7 @@ export async function POST(req) {
             return NextResponse.json({ error: "Invalid address ID" }, { status: 400 });
         }
 
-        // ✅ 1.5: Fetch the user to get phone number
+        // 2. Fetch user details
         const user = await prisma.user.findUnique({
             where: { UserID: userId },
             select: {
@@ -36,11 +33,11 @@ export async function POST(req) {
             return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
         }
 
-        // 2. Clone address into OrderAddress for historical consistency
+        // 3. Clone address into OrderAddress
         const orderAddress = await prisma.orderAddress.create({
             data: {
                 fullName: user.FullName || "N/A",
-                phoneNumber: user.PhoneNumber || "0000000000", // ✅ correct source
+                phoneNumber: user.PhoneNumber || "0000000000",
                 addressLine1: userAddress.AddressLine1,
                 addressLine2: userAddress.AddressLine2 || "",
                 city: userAddress.City,
@@ -50,8 +47,7 @@ export async function POST(req) {
             },
         });
 
-
-        // 3. Prepare items: fetch variant info, calculate final prices
+        // 4. Prepare items with prices
         const itemsWithPrices = await Promise.all(
             items.map(async (item) => {
                 const variant = await prisma.productVariant.findUnique({
@@ -78,12 +74,12 @@ export async function POST(req) {
             })
         );
 
-        // 4. Calculate total order pricing
+        // 5. Calculate totals
         const subtotal = itemsWithPrices.reduce((acc, item) => acc + item.totalPrice, 0);
-        const shippingFee = 0; // Update if you introduce shipping logic
+        const shippingFee = 0;
         const totalPrice = subtotal + shippingFee;
 
-        // 5. Create Order in DB
+        // 6. Create order with payment method COD
         const order = await prisma.order.create({
             data: {
                 userId,
@@ -92,7 +88,7 @@ export async function POST(req) {
                 shippingFee: new Prisma.Decimal(shippingFee),
                 subtotal: new Prisma.Decimal(subtotal),
                 totalAmount: new Prisma.Decimal(totalPrice),
-                paymentMethod: "card",
+                paymentMethod: "cod", // ✅ COD
                 items: {
                     create: itemsWithPrices.map((item) => ({
                         variantId: item.variantId,
@@ -105,39 +101,16 @@ export async function POST(req) {
                 payments: {
                     create: {
                         amount: new Prisma.Decimal(totalPrice),
-                        status: "PENDING",
-                        method: "card",
+                        status: "PENDING", // COD remains pending
+                        method: "cod",
                     },
                 },
             },
         });
 
-        // 6. Create Stripe Checkout session
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            line_items: itemsWithPrices.map((item) => ({
-                price_data: {
-                    currency: "inr",
-                    product_data: {
-                        name: item.variantName,
-                    },
-                    unit_amount: Math.round(Number(item.price)) * 100, // ₹ to paise, no decimals
-
-                },
-                quantity: item.quantity,
-            })),
-            mode: "payment",
-            success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?orderId=${order.id}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/cancel`,
-            metadata: {
-                orderId: order.id.toString(),
-                userId: userId.toString(),
-            },
-        });
-
-        return NextResponse.json({ sessionId: session.id, url: session.url });
+        return NextResponse.json({ success: true, orderId: order.id });
     } catch (error) {
-        console.error("Stripe Checkout Error:", error);
+        console.error("COD Checkout Error:", error);
         return NextResponse.json(
             { error: "Something went wrong", details: error.message },
             { status: 500 }

@@ -1,5 +1,4 @@
 "use client";
-
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CheckCircle, Truck, MapPin, CreditCard, Gift, Star, ArrowRight, Package, Calendar, Clock } from 'lucide-react';
@@ -7,12 +6,10 @@ import Navbar from "@/app/components/Navbar/Navbar";
 import CategoryNav from "@/app/components/Categories/Categories";
 import { format } from "date-fns";
 import { subDays } from "date-fns";
-
-
-
-
+import { useRouter } from "next/navigation";
 
 export default function CheckoutSuccess() {
+  const router = useRouter()
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
   const [order, setOrder] = useState(null);
@@ -89,9 +86,8 @@ export default function CheckoutSuccess() {
       year: "numeric",
     });
 
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <Navbar />
       <CategoryNav />
 
@@ -112,7 +108,7 @@ export default function CheckoutSuccess() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* Order Summary */}
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white shadow-xl rounded-md p-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-1 uppercase" >order #{order?.id}</h2>
@@ -153,7 +149,7 @@ export default function CheckoutSuccess() {
 
               {/* Items */}
               <div className="lg:col-span-2 order-2 lg:order-1 w-full">
-                <div className="bg-white rounded-sm shadow-md p-6 mb-6 w-full">
+                <div className="bg-white rounded-sm  p-6 mb-6 w-full">
                   <div className="flex items-center justify-between mb-8 border-b border-gray-300 pb-10 ">
                     <h1 className="text-md font-semibold text-gray-700 uppercase">ITEMS IN THIS ORDERS</h1>
                   </div>
@@ -231,7 +227,7 @@ export default function CheckoutSuccess() {
             </div>
 
             {/* Tracking Info */}
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white shadow-xl rounded-md p-6">
               <h3 className="font-semibold text-gray-900 mb-6 text-lg uppercase">Track your package</h3>
 
               <div className="relative ml-4">
@@ -259,7 +255,7 @@ export default function CheckoutSuccess() {
                       {/* Step Content */}
                       <div className="ml-4">
                         <p
-                          className={`text-md font-sm uppercase  ${isCompleted ? "text-gray-900" : "text-gray-500"
+                          className={`text-md font-medium uppercase  ${isCompleted ? "text-gray-900" : "text-gray-500"
                             }`}
                         >
                           {step.title}
@@ -275,22 +271,12 @@ export default function CheckoutSuccess() {
             </div>
 
 
-
-
             {/* Actions */}
-            <div className="bg-white rounded-lg border p-6 uppercase">
+            <div className="bg-white shadow-xl rounded-md p-6 uppercase">
               <h3 className="font-semibold text-gray-900 mb-4">Need help with your order?</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <button className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <span className="font-medium text-gray-900 uppercase">Track package</span>
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                </button>
-                <button className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <span className="font-medium text-gray-900 uppercase">Return items</span>
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                </button>
-                <button className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <span className="font-medium text-gray-900 uppercase">Contact seller</span>
                   <ArrowRight className="w-4 h-4 text-gray-400" />
                 </button>
                 <button className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
@@ -306,7 +292,7 @@ export default function CheckoutSuccess() {
 
             {/* Order Total */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg border p-6">
+              <div className="bg-white shadow-xl rounded-md p-6">
                 <h3 className="font-semibold text-gray-900 mb-4 uppercase">Order Summary</h3>
                 <div className="flex justify-between">
                   <span className="font-semibold text-gray-900">
@@ -321,8 +307,8 @@ export default function CheckoutSuccess() {
 
 
             {/* Payment Method */}
-            <div className="bg-white rounded-lg border p-6">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="bg-white shadow-xl rounded-md p-6">
+              <h3 className="font-semibold text-gray-900 mb-4 flex items-center uppercase">
                 <CreditCard className="w-5 h-5 mr-2 uppercase" />
                 Payment Method
               </h3>
