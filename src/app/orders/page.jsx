@@ -88,7 +88,7 @@ const page = () => {
                         {/* Header */}
                         <div className=" max-w-7xl mx-auto ">
                             <div className="max-w-7xl mx-auto psm:px-6 lg:px-8 s">
-                                <div className="py-4">
+                                <div className="py-4 px-4">
                                     <h1 className="text-2xl font-semibold text-gray-900 uppercase">Your Orders</h1>
                                     <p className="text-sm text-gray-600 mt-1 uppercase">Track packages, review orders, and discover new products</p>
                                 </div>
@@ -185,12 +185,15 @@ const page = () => {
                                         <div className="px-6 py-4">
                                             <div className="space-y-4">
                                                 {order.items.map((item, index) => (
-                                                    <div key={index} className="flex flex-col sm:flex-row gap-4 uppercase">
-
-                                                        <div className="w-full sm:w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                                    <div
+                                                        key={index}
+                                                        className="flex flex-row gap-4 uppercase items-start mb-6"
+                                                    >
+                                                        {/* Product Image */}
+                                                        <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
                                                             {item.image ? (
                                                                 <Image
-                                                                    src={item?.image}
+                                                                    src={item.image}
                                                                     alt={item.name}
                                                                     width={80}
                                                                     height={80}
@@ -201,58 +204,65 @@ const page = () => {
                                                             )}
                                                         </div>
 
-                                                        <div className="flex-1">
-                                                            <h3
-                                                                onClick={() => router.push(`/products/${item.productId}`)} // or item.slug if you're using slugs
-                                                                className="font-medium text-blue-600 hover:underline cursor-pointer line-clamp-2"
-                                                            >
-                                                                {item.name}
-                                                            </h3>
-                                                            <p className="text-sm text-gray-600 mt-1">
-                                                                {item.variantName}
-                                                            </p>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <div className="flex items-center">
-                                                                    {[...Array(5)].map((_, i) => (
-                                                                        <Star
-                                                                            key={i}
-                                                                            className={`w-4 h-4 ${i < Math.floor(item.rating)
-                                                                                ? 'text-yellow-400 fill-current'
-                                                                                : 'text-gray-300'
-                                                                                }`}
-                                                                        />
-                                                                    ))}
+                                                        {/* Product Info and Actions */}
+                                                        <div className="flex-1 flex flex-col sm:flex-row sm:justify-between gap-2 sm:items-center">
+                                                            {/* Info */}
+                                                            <div className="flex-1">
+                                                                <h3
+                                                                    onClick={() => router.push(`/products/${item.productId}`)}
+                                                                    className="font-medium text-blue-600 hover:underline cursor-pointer line-clamp-2"
+                                                                >
+                                                                    {item.name}
+                                                                </h3>
+                                                                <p className="text-sm text-gray-600 mt-1">{item.variantName}</p>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <div className="flex items-center">
+                                                                        {[...Array(5)].map((_, i) => (
+                                                                            <Star
+                                                                                key={i}
+                                                                                className={`w-4 h-4 ${i < Math.floor(item.rating)
+                                                                                        ? 'text-yellow-400 fill-current'
+                                                                                        : 'text-gray-300'
+                                                                                    }`}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                    <span className="text-sm text-gray-600">({item.rating})</span>
                                                                 </div>
-                                                                <span className="text-sm text-gray-600">({item.rating})</span>
+                                                                <p className="text-sm text-gray-600 mt-1">
+                                                                    Qty: {item.quantity} | ₹{item.price}
+                                                                </p>
                                                             </div>
 
-                                                            <p className="text-sm text-gray-600 mt-1">
-                                                                Qty: {item.quantity} | ${item.price}
-                                                            </p>
-                                                        </div>
-                                                        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                                                            <button
-                                                                onClick={() => router.push(`/products/${item.productId}`)} className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded text-sm font-medium uppercase">
-                                                                Buy it again
-                                                            </button>
-                                                            {order.status === 'delivered' && (
-                                                                <button className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm font-medium uppercase">
-                                                                    Write a review
+                                                            {/* Actions */}
+                                                            <div className="flex gap-2 mt-2 sm:mt-0 sm:flex-col sm:items-end">
+                                                                <button
+                                                                    onClick={() => router.push(`/products/${item.productId}`)}
+                                                                    className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded text-sm font-medium uppercase whitespace-nowrap"
+                                                                >
+                                                                    Buy it again
                                                                 </button>
-                                                            )}
+                                                                {order.status === 'delivered' && (
+                                                                    <button className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm font-medium uppercase whitespace-nowrap">
+                                                                        Write a review
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))}
+
+
                                             </div>
                                         </div>
 
                                         {/* Order Actions */}
                                         <div className="px-6 py-4 bg-gray-50 ">
                                             <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
-                                                <button 
-                                                 onClick={() => router.push(`/checkout/success?orderId=${order.id}`)}
-                                                className="border border-gray-300 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium uppercase">
-                                                  MANAGE ORDER 
+                                                <button
+                                                    onClick={() => router.push(`/checkout/success?orderId=${order.id}`)}
+                                                    className="border border-gray-300 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-medium uppercase">
+                                                    MANAGE ORDER
                                                 </button>
                                             </div>
                                         </div>
