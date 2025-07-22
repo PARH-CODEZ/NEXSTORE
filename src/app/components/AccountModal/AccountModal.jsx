@@ -83,12 +83,12 @@ const AccountModal = ({
 
             {/* YOUR ACCOUNT */}
             <div>
-              <h3 className="text-base font-semibold mb-3 text-gray-800">
+              <h3 className="text-base font-semibold mb-3 text-black">
                 YOUR ACCOUNT
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <button onClick={() => router.push('/account')} className="block text-left w-full text-gray-700 hover:underline hover:text-gray-900">
+                  <button onClick={() => router.push('/account')} className="block text-left w-full text-black hover:underline hover:text-gray-900 font-bold">
                     YOUR ACCOUNT
                   </button>
                 </li>
@@ -96,18 +96,23 @@ const AccountModal = ({
                   <li>
                     <button
                       onClick={() => router.push('/manageproducts')}
-                      className="block text-left w-full text-gray-700 hover:underline hover:text-gray-900"
+                      className="block text-left w-full text-black hover:underline hover:text-gray-900 font-bold"
                     >
                       YOUR PRODUCTS
                     </button>
                   </li>
                 )}
 
-                <li>
-                  <button onClick={() => router.push('/wishlist')} className="block text-left w-full text-gray-700 hover:underline hover:text-gray-900">
-                    YOUR WISH LIST
-                  </button>
-                </li>
+                {user?.role === 'seller' && (
+                  <li>
+                    <button
+                      onClick={() => router.push('/seller-orders')}
+                      className="block text-left w-full text-black hover:underline hover:text-gray-900 font-bold"
+                    >
+                      MANAGE YOUR ORDERS
+                    </button>
+                  </li>
+                )}
                 <li>
                   <button onClick={() => router.push('/recommendations')} className="block text-left w-full text-gray-700 hover:underline hover:text-gray-900">
                     YOUR RECOMMENDATIONS

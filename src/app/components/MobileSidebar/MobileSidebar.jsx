@@ -95,6 +95,17 @@ const MobileSidebar = ({ isOpen, onClose }) => {
               </Link>
 
 
+              <Link href={'/seller-orders'}>
+                <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group  border-gray-100">
+                  <div className='flex flex-row space-x-3 '>
+                    <Boxes size={18} className="text-gray-500" />
+                    <span className="text-gray-800 font-medium">MANAGE ORDERS</span>
+                  </div>
+                  <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+                </button>
+              </Link>
+
+
             </>
           )}
         </div>
@@ -124,21 +135,6 @@ const MobileSidebar = ({ isOpen, onClose }) => {
               <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
             </button>
 
-            <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">
-              <div className="flex items-center space-x-3">
-                <Truck size={18} className="text-gray-500" />
-                <span className="text-gray-800 font-medium">DELIVERY SPEEDS & CHARGES</span>
-              </div>
-              <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
-            </button>
-
-            <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">
-              <div className="flex items-center space-x-3">
-                <Headphones size={18} className="text-gray-500" />
-                <span className="text-gray-800 font-medium">CUSTOMER SERVICE</span>
-              </div>
-              <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
-            </button>
           </div>
         </div>
 
@@ -159,21 +155,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
               </button>
             </Link>
 
-            <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">
-              <div className="flex items-center space-x-3">
-                <User size={18} className="text-gray-500" />
-                <span className="text-gray-800 font-medium">RECOMMENDATIONS</span>
-              </div>
-              <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
-            </button>
 
-            <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">
-              <div className="flex items-center space-x-3">
-                <Clock size={18} className="text-gray-500" />
-                <span className="text-gray-800 font-medium">BROWSING HISTORY</span>
-              </div>
-              <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
-            </button>
           </div>
         </div>
 
