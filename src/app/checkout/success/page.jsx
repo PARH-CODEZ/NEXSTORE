@@ -7,6 +7,7 @@ import CategoryNav from "@/app/components/Categories/Categories";
 import { format } from "date-fns";
 import { subDays } from "date-fns";
 import { useRouter } from "next/navigation";
+import CancelItemsModal from "@/app/components/CancleItemsModal.jsx/CancleItemModel";
 
 export default function CheckoutSuccess() {
   const router = useRouter()
@@ -15,22 +16,36 @@ export default function CheckoutSuccess() {
   const [order, setOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [quantities, setQuantities] = useState({});
+  const [showModal, setShowModal] = useState(false);
+  const [updated, setUpdated] = useState(false)
+  const [loading, setLoading] = useState(false)
+
   useEffect(() => {
     if (orderId) {
+      setLoading(true)
       fetch(`/api/order/${orderId}`)
         .then((res) => res.json())
         .then((data) => {
           console.log("Fetched order:", data);
           setOrder(data);
           setItems(data.items); // ✅ use data directly here
-          console.log(data.items)
+          setLoading(false)
         });
     }
-  }, [orderId]);
+  }, [orderId, updated]);
 
 
   if (!order) {
-    return <div>Loading your order details...</div>;
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center gap-4 py-20">
+        <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+
+  }
+
+  const handleUpdate = () => {
+    setUpdated(prev=>!prev)
   }
 
   const formatPrice = (price) =>
@@ -261,7 +276,7 @@ export default function CheckoutSuccess() {
                           {step.title}
                         </p>
                         <p className="text-sm text-gray-400">
-                          {format(step.date, "MMMM dd, yyyy - h:mm a")}
+                          {format(step.date, "MMMM dd, yyyy -")}
                         </p>
                       </div>
                     </div>
@@ -275,12 +290,25 @@ export default function CheckoutSuccess() {
             <div className="bg-white shadow-xl rounded-md p-6 uppercase">
               <h3 className="font-semibold text-gray-900 mb-4">Need help with your order?</h3>
               <div className="grid md:grid-cols-2 gap-4">
+                {isDelivered ? (
+
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <span className="font-medium text-gray-900 uppercase">Return items</span>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                  </button>
+                ) : (
+
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <span className="font-medium text-gray-900 uppercase">Cancel items</span>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                  </button>
+                )}
                 <button className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <span className="font-medium text-gray-900 uppercase">Return items</span>
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                </button>
-                <button className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <span className="font-medium text-gray-900 uppercase">Write a review</span>
+                  <span className="font-medium text-gray-900 uppercase">NEED HELP WITH ORDER ?</span>
                   <ArrowRight className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
@@ -317,7 +345,15 @@ export default function CheckoutSuccess() {
               </p>
             </div>
 
-
+            {showModal && (
+              <CancelItemsModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                orderId={orderId}
+                items={items}
+                onUpdate={handleUpdate}
+              />
+            )}
 
 
 
