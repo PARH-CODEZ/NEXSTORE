@@ -39,8 +39,6 @@ export default function ProductsPage() {
         const data = await res.json();
         console.log(data)
         setProducts(data.products || []);
-        setTotalRevenue(data.stats.totalRevenue || 0)
-        setTotalSales(data.stats.totalSales || 0)
         setActiveProducts(data.stats.activeProducts || 0)
         setPendingProducts(data.stats.pendingProducts || 0)
         setInactiveProducts(data.stats.inactiveProducts || 0)
