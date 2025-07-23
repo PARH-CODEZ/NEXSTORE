@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar/Navbar';
-import { Plus, Download, Upload, Package, DollarSign, ShoppingCart, TrendingUp, Search, Filter, ArrowUpDown, RefreshCw, } from 'lucide-react';
+import { Plus, Download, Upload, Package, TrendingUp, Search, Filter, ArrowUpDown, RefreshCw, Clock, Ban, } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import Link from 'next/link';
 import FullScreenLoader from '../components/FullScreenLoader/FullScreenLoader';
@@ -12,8 +12,17 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [loadingCats, setLoadingCats] = useState(false);
-
   const [update, setUpdate] = useState(false)
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const statuses = ['all', 'active', 'inactive', 'pending'];
+
+  const [activeProducts, setActiveProducts] = useState(0)
+  const [pendingProducts, setPendingProducts] = useState(0)
+  const [inactiveProducts, setInactiveProducts] = useState(0)
 
   useEffect(() => {
     if (!user || user.role !== 'seller') return;
@@ -33,6 +42,8 @@ export default function ProductsPage() {
         setTotalRevenue(data.stats.totalRevenue || 0)
         setTotalSales(data.stats.totalSales || 0)
         setActiveProducts(data.stats.activeProducts || 0)
+        setPendingProducts(data.stats.pendingProducts || 0)
+        setInactiveProducts(data.stats.inactiveProducts || 0)
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -68,15 +79,7 @@ export default function ProductsPage() {
     fetchCategories();
   }, []);
 
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const statuses = ['all', 'active', 'inactive', 'pending'];
-  const [totalRevenue, setTotalRevenue] = useState(0)
-  const [totalSales, setTotalSales] = useState(0)
-  const [activeProducts, setActiveProducts] = useState(0)
+
 
   useEffect(() => {
     let filtered = [...products];
@@ -248,16 +251,16 @@ export default function ProductsPage() {
             bgTo="to-gray-300"
           />
           <StatCard
-            title="TOTAL REVENUE"
-            value={`${totalRevenue}`}
-            Icon={DollarSign}
+            title="PENDING PRODUCTS"
+            value={`${pendingProducts}`}
+            Icon={Clock}
             bgFrom="from-green-100"
             bgTo="to-green-200"
           />
           <StatCard
-            title="TOTAL SALES"
-            value={totalSales}
-            Icon={ShoppingCart}
+            title="INACTIVE PRODUCTS"
+            value={inactiveProducts}
+            Icon={Ban}
             bgFrom="from-purple-100"
             bgTo="to-purple-200"
           />

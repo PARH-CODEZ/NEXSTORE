@@ -86,22 +86,21 @@ export async function POST(req) {
     }));
 
     /* ── 7. Stats (unchanged, but global to admin / seller) ── */
-    const sellerFilter = isAdmin ? {} : { product: { sellerId } };
+    /* ── 7. Stats (only product statuses) ── */
+    const productBaseFilter = isAdmin ? {} : { sellerId };
 
-    const agg = await prisma.orderItem.aggregate({
-      where: { variant: sellerFilter, order: { status: 'DELIVERED' } },
-      _sum: { quantity: true, totalPrice: true },
-    });
+    const [activeProducts, inactiveProducts, pendingProducts] = await Promise.all([
+      prisma.product.count({
+        where: { ...productBaseFilter, isApproved: true, stockAvailable: true },
+      }),
+      prisma.product.count({
+        where: { ...productBaseFilter, isApproved: true, stockAvailable: false },
+      }),
+      prisma.product.count({
+        where: { ...productBaseFilter, isApproved: false },
+      }),
+    ]);
 
-    const totalRevenue = new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(Number(agg._sum.totalPrice ?? 0));
-
-    const activeProducts = await prisma.product.count({
-      where: { ...(isAdmin ? {} : { sellerId }), isApproved: true, stockAvailable: true },
-    });
 
     /* ── 8. Response ── */
     return NextResponse.json({
@@ -113,8 +112,8 @@ export async function POST(req) {
         totalPages: Math.ceil(totalProducts / limit),
       },
       stats: {
-        totalSales: Number(agg._sum.quantity ?? 0),
-        totalRevenue,
+        inactiveProducts,
+        pendingProducts,
         activeProducts,
       },
     });

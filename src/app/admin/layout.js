@@ -37,7 +37,7 @@ export default function AdminDashboardLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex">
+    <div className="h-[100vh] bg-gradient-to-br from-slate-50 to-gray-100 flex">
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -54,7 +54,7 @@ export default function AdminDashboardLayout({ children }) {
               <Package className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              <span className="text-lg font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                 ADMIN
               </span>
               <div className="text-xs text-gray-500 font-medium">CONTROL PANEL</div>

@@ -235,7 +235,7 @@ const OrderManagement = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 uppercase">Order Information</h3>
                   <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Order ID:</span>
@@ -268,7 +268,7 @@ const OrderManagement = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Details</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 uppercase">Product Details</h3>
                   <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                     {order.products?.length > 0 ? (
                       order.products.map((product, index) => (
@@ -284,7 +284,7 @@ const OrderManagement = () => {
                         </div>
                       ))
                     ) : (
-                      <div className="text-sm text-gray-500 italic">No products found</div>
+                      <div className="text-sm text-gray-500 italic uppercase">No products found</div>
                     )}
                     <div className="flex justify-between text-sm pt-3 mt-2 border-t border-gray-300">
                       <span className="text-gray-600">Total Quantity:</span>
@@ -297,7 +297,7 @@ const OrderManagement = () => {
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 uppercase">Customer Information</h3>
                   <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
@@ -316,7 +316,7 @@ const OrderManagement = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 uppercase">Shipping Address</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <div className="flex items-start space-x-3">
                       <MapPin className="w-4 h-4 text-gray-400 mt-1" />
@@ -326,7 +326,7 @@ const OrderManagement = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 uppercase">Actions</h3>
                   <div className="space-y-2">
                     <select
                       value={order.status}
@@ -344,12 +344,6 @@ const OrderManagement = () => {
                       <option value="RETURNED">Returned</option>
 
                     </select>
-                    <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                      Send Update Email
-                    </button>
-                    <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                      Print Shipping Label
-                    </button>
                   </div>
                 </div>
               </div>
@@ -457,14 +451,14 @@ const OrderManagement = () => {
               },
               {
                 title: 'PENDING',
-                value: orders.filter((o) => o.status === 'pending').length,
+                value: orders.filter((o) => o.status === 'PENDING').length,
                 Icon: Clock,
                 bgFrom: 'from-yellow-100',
                 bgTo: 'to-yellow-200',
               },
               {
                 title: 'SHIPPED',
-                value: orders.filter((o) => o.status === 'shipped').length,
+                value: orders.filter((o) => o.status === 'SHIPPED').length,
                 Icon: Truck,
                 bgFrom: 'from-purple-100',
                 bgTo: 'to-purple-200',

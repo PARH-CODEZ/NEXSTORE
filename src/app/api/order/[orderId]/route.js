@@ -34,6 +34,12 @@ export async function GET(req, { params }) {
         },
         payments: true,
         shipments: true,
+
+        history: {
+          orderBy: {
+            timestamp: "asc", 
+          },
+        },
       },
     });
 

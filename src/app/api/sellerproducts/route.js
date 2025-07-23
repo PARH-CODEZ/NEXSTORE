@@ -29,88 +29,47 @@ export async function POST(req) {
         reviews: { select: { rating: true } },
         variants: {
           take: 1,
-          select: {additionalPrice:true,images: { take: 1, select: { imageUrl: true } } },
+          select: {
+            additionalPrice: true,
+            images: { take: 1, select: { imageUrl: true } },
+          },
         },
         _count: { select: { reviews: true, variants: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    /* ─── 3. Roll‑up sales & revenue per product ─── */
+    /* ─── 3. Count active, inactive, pending ─── */
+    const [activeCount, inactiveCount, pendingCount] = await Promise.all([
+      prisma.product.count({
+        where: {
+          sellerId,
+          isApproved: true,
+          stockAvailable: true,
+        },
+      }),
+      prisma.product.count({
+        where: {
+          sellerId,
+          isApproved: true,
+          stockAvailable: false,
+        },
+      }),
+      prisma.product.count({
+        where: {
+          sellerId,
+          isApproved: false,
+        },
+      }),
+    ]);
 
-    // 3‑a. All variantIds that belong to *any* product of this seller
-    const variantIds = (
-      await prisma.productVariant.findMany({
-        where: { product: { sellerId } },
-        select: { id: true, productId: true },
-      })
-    );
-
-    const variantToProduct = Object.fromEntries(
-      variantIds.map((v) => [v.id, v.productId])
-    );
-    const variantIdList = Object.keys(variantToProduct).map(Number);
-
-    // 3‑b. Aggregate orderItems by variantId
-    const variantSales = await prisma.orderItem.groupBy({
-      by: ['variantId'],
-      _sum: { quantity: true, totalPrice: true },
-      where: {
-        variantId: { in: variantIdList },
-        order: { status: 'DELIVERED' }, // completed orders only
-      },
-    });
-
-    // 3‑c. Roll up to productId
-    const productSalesMap = {};
-    for (const { variantId, _sum } of variantSales) {
-      const pid = variantToProduct[variantId];
-      if (!productSalesMap[pid])
-        productSalesMap[pid] = { unitsSold: 0, revenue: 0 };
-
-      productSalesMap[pid].unitsSold += Number(_sum.quantity ?? 0);
-      productSalesMap[pid].revenue += Number(_sum.totalPrice ?? 0);
-    }
-
-    // 3‑d. Merge into original product list
-    const enrichedProducts = products.map((p) => ({
-      ...p,
-      unitsSold: productSalesMap[p.id]?.unitsSold ?? 0,
-      revenue: productSalesMap[p.id]?.revenue ?? 0,
-    }));
-
-    /* ─── 4. Seller‑level aggregates ─── */
-    const sellerAgg = await prisma.orderItem.aggregate({
-      where: {
-        variant: { product: { sellerId } },
-        order: { status: 'DELIVERED' },
-      },
-      _sum: { quantity: true, totalPrice: true },
-    });
-
-    const totalSales = Number(sellerAgg._sum.quantity ?? 0);
-    const totalRevenueRaw = Number(sellerAgg._sum.totalPrice ?? 0);
-    const totalRevenue = new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(totalRevenueRaw);
-
-    const activeProducts = await prisma.product.count({
-      where: {
-        sellerId,
-        isApproved: true,
-        stockAvailable: true,
-      },
-    });
-
-    /* ─── 5. Response ─── */
+    /* ─── 4. Response ─── */
     return NextResponse.json({
-      products: enrichedProducts,
+      products,
       stats: {
-        totalSales,
-        totalRevenue,
-        activeProducts,
+        activeProducts: activeCount,
+        inactiveProducts: inactiveCount,
+        pendingProducts: pendingCount,
       },
     });
   } catch (err) {

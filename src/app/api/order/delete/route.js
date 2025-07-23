@@ -3,11 +3,9 @@ import prisma from "@/lib/prisma";
 
 export async function POST(req) {
   try {
-    /* ── 1. Read and validate body ─────────────────────────────── */
     const { orderId, orderItemId } = await req.json();
 
-    // Cast to numbers because JSON strings ≠ Prisma Ints
-    const numericOrderId     = Number(orderId);
+    const numericOrderId = Number(orderId);
     const numericOrderItemId = Number(orderItemId);
 
     if (!numericOrderId || !numericOrderItemId) {
@@ -17,9 +15,8 @@ export async function POST(req) {
       );
     }
 
-    console.log("🔎  Cancel request:", { numericOrderId, numericOrderItemId });
+    console.log("🔎 Cancel request:", { numericOrderId, numericOrderItemId });
 
-    /* ── 2. Fetch order item and verify ownership ──────────────── */
     const orderItem = await prisma.orderItem.findUnique({
       where: { id: numericOrderItemId },
       include: { order: true },
@@ -39,25 +36,33 @@ export async function POST(req) {
       );
     }
 
-    /* ── 3. Delete (or flag) the item ──────────────────────────── */
     await prisma.orderItem.delete({ where: { id: numericOrderItemId } });
 
-    /* ── 4. If no items remain, cancel the whole order ─────────── */
     const remainingItems = await prisma.orderItem.findMany({
       where: { orderId: numericOrderId },
     });
 
     if (remainingItems.length === 0) {
-      await prisma.order.update({
-        where: { id: numericOrderId },
-        data: {
-          status: "CANCELLED",
-          cancelledAt: new Date(),
-        },
-      });
+      await prisma.$transaction([
+        prisma.order.update({
+          where: { id: numericOrderId },
+          data: {
+            status: "CANCELLED",
+            cancelledAt: new Date(),
+          },
+        }),
+
+        prisma.orderStatusHistory.create({
+          data: {
+            orderId: numericOrderId,
+            status: "CANCELLED",
+            note: "Cancelled due to all items being removed",
+            updatedBy: null, 
+          },
+        }),
+      ]);
     }
 
-    /* ── 5. Respond OK ──────────────────────────────────────────── */
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("❌ Cancel Item Error:", error);

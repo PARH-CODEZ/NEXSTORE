@@ -26,7 +26,6 @@ export default function CheckoutSuccess() {
       fetch(`/api/order/${orderId}`)
         .then((res) => res.json())
         .then((data) => {
-          console.log("Fetched order:", data);
           setOrder(data);
           setItems(data.items); // ✅ use data directly here
           setLoading(false)
@@ -45,7 +44,7 @@ export default function CheckoutSuccess() {
   }
 
   const handleUpdate = () => {
-    setUpdated(prev=>!prev)
+    setUpdated(prev => !prev)
   }
 
   const formatPrice = (price) =>
@@ -72,27 +71,50 @@ export default function CheckoutSuccess() {
 
   }, 0);
 
+  const ORDER_PROGRESS_FLOW = [
+    "CONFIRMED",
+    "PACKED",
+    "SHIPPED",
+    "OUT_FOR_DELIVERY",
+    "DELIVERED",
+  ];
 
 
-
-  const placedDate = new Date(order.placedAt)
-  const preparingDate = new Date(placedDate);
-  preparingDate.setDate(placedDate.getDate() + 1);
-
-  const deliveryDate = new Date(placedDate);
-  deliveryDate.setDate(placedDate.getDate() + 2);
+  const formatStatusToTitle = (status) => {
+    switch (status) {
+      case "CONFIRMED":
+        return "Order Confirmed";
+      case "PACKED":
+        return "Order Packed";
+      case "SHIPPED":
+        return "Order Shipped";
+      case "OUT_FOR_DELIVERY":
+        return "Out for Delivery";
+      case "DELIVERED":
+        return "Delivered";
+      default:
+        return status; // fallback
+    }
+  };
 
   const now = new Date();
-  const isDelivered = deliveryDate <= now;
+
+
+  const existingSteps = order.history.reduce((acc, h) => {
+    acc[h.status] = new Date(h.timestamp);
+    return acc;
+  }, {}); // { CONFIRMED: Date, PACKED: Date, ... }
+
+  const steps = ORDER_PROGRESS_FLOW.map((status) => {
+    return {
+      status,
+      title: formatStatusToTitle(status),
+      date: existingSteps[status] || null, // null means it's a future step
+    };
+  });
 
 
 
-  const steps = [
-    { title: "Order confirmed", date: placedDate },
-    { title: "Preparing for shipment", date: preparingDate },
-    { title: "Out for delivery", date: deliveryDate },
-    { title: "Delivered", date: deliveryDate },
-  ];
 
   const formatDate = (date) =>
     date.toLocaleDateString("en-US", {
@@ -100,6 +122,9 @@ export default function CheckoutSuccess() {
       day: "numeric",
       year: "numeric",
     });
+
+
+  const isDelivered = order.status === 'DELIVERED'
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -243,21 +268,35 @@ export default function CheckoutSuccess() {
 
             {/* Tracking Info */}
             <div className="bg-white shadow-xl rounded-md p-6">
-              <h3 className="font-semibold text-gray-900 mb-6 text-lg uppercase">Track your package</h3>
+              <h3 className="font-semibold text-gray-900 mb-6 text-lg uppercase">
+                Track your package
+              </h3>
+              {["CANCELLED", "RETURN_REQUESTED", "RETURNED"].includes(order.status) && (
+                <div className={`p-4 rounded-md mb-6 uppercase font-semibold text-sm
+                 ${order.status === "CANCELLED" ? "bg-red-100 text-red-800" : ""}
+                ${order.status === "RETURN_REQUESTED" ? "bg-yellow-100 text-yellow-800" : ""}
+                 ${order.status === "RETURNED" ? "bg-green-100 text-green-800" : ""}
+                  `}>
+                  Order {order.status.replaceAll("_", " ").toLowerCase()}
+                </div>
+              )}
 
               <div className="relative ml-4">
                 {steps.map((step, index) => {
-                  const isCompleted = now >= step.date;
+                  const isCompleted = step.date && now >= step.date;
                   const isLast = index === steps.length - 1;
 
                   return (
                     <div key={index} className="relative flex items-start pb-8">
-                      {/* Vertical Green Line Only if completed and not last */}
-                      {isCompleted && !isLast && (
-                        <span className="absolute left-1.5 top-3 h-full w-[3px] bg-green-500 z-0" />
+                      {/* Vertical Line */}
+                      {(!isLast) && (
+                        <span
+                          className={`absolute left-1.5 top-3 h-full w-[3px] z-0 ${isCompleted ? "bg-green-500" : "bg-gray-300"
+                            }`}
+                        />
                       )}
 
-                      {/* Step Dot */}
+                      {/* Dot */}
                       <div className="relative z-10">
                         <span
                           className={`w-4 h-4 rounded-full block border-2 ${isCompleted
@@ -267,16 +306,18 @@ export default function CheckoutSuccess() {
                         />
                       </div>
 
-                      {/* Step Content */}
+                      {/* Content */}
                       <div className="ml-4">
                         <p
-                          className={`text-md font-medium uppercase  ${isCompleted ? "text-gray-900" : "text-gray-500"
+                          className={`text-md font-medium uppercase ${isCompleted ? "text-gray-900" : "text-gray-500"
                             }`}
                         >
                           {step.title}
                         </p>
                         <p className="text-sm text-gray-400">
-                          {format(step.date, "MMMM dd, yyyy -")}
+                          {step.date
+                            ? format(step.date, "MMMM dd, yyyy - hh:mm a")
+                            : "Pending"}
                         </p>
                       </div>
                     </div>
@@ -284,6 +325,7 @@ export default function CheckoutSuccess() {
                 })}
               </div>
             </div>
+
 
 
             {/* Actions */}
