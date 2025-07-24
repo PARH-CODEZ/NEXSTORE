@@ -85,9 +85,13 @@ export async function middleware(req) {
   }
 
   if (role === 'admin') {
-    if (pathname === '/admin/dashboard' || pathname.startsWith('/admin') || pathname === '/category' || pathname === '/products') {
+    const isAdminPath = pathname.startsWith('/admin/dashboard') || pathname.startsWith('/admin');
+    const isAllowedNonAdminPath = pathname.startsWith('/products')
+
+    if (isAdminPath || isAllowedNonAdminPath) {
       return NextResponse.next();
     }
+
     return NextResponse.redirect(new URL('/admin/dashboard', req.url));
   }
 

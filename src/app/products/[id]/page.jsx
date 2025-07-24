@@ -801,7 +801,7 @@ const Productpage = () => {
 
                       {descriptionItems.length > 0 && (
                         <div className="bg-white rounded-lg">
-                          <h2 className="text-xl font-bold mb-4 uppercase">About this item</h2>
+                          <h2 className="text-xl font-semibold mb-4 uppercase">About this item</h2>
                           <div className="space-y-4">
                             {descriptionItems.map((item, index) => (
                               <div key={index}>
