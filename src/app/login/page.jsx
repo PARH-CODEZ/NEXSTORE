@@ -1,16 +1,11 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-// import { RecaptchaVerifier } from 'firebase/auth';
-// import { auth } from '@/lib/firebaseConfig';
-// import { signInWithPhoneNumber } from 'firebase/auth';
-// import sendOtpToPhone from '@/lib/sendOtpToPhone';
-// import Footer from './Footer'; // Uncomment this when you have the Footer component
+import { supabase } from '@/lib/supabaseClient';
 import { useDispatch } from 'react-redux';
 import { setUser } from '@/store/userSlice';
 import { toast } from 'react-toastify';
-
 
 const InputField = ({
   type = 'text',
@@ -20,7 +15,8 @@ const InputField = ({
   error,
   showToggle = false,
   showValue = false,
-  onToggle
+  onToggle,
+  disabled = false
 }) => (
   <div className="mb-4">
     <div className="relative">
@@ -29,10 +25,11 @@ const InputField = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        disabled={disabled}
         className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 transition-all ${error
           ? 'border-red-500 focus:ring-red-200'
           : 'border-gray-300 focus:ring-orange-200 focus:border-orange-500'
-          }`}
+          } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
       />
       {showToggle && (
         <button
@@ -55,7 +52,6 @@ const InputField = ({
 
 const Login = () => {
   const dispatch = useDispatch();
-
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState('initial'); //[ initial, signin, signup, password]
   const [email, setEmail] = useState('');
@@ -69,6 +65,69 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false)
+  const [otpPurpose, setOtpPurpose] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [resendTimer, setResendTimer] = useState(60);
+  const [isResendDisabled, setIsResendDisabled] = useState(false);
+
+  useEffect(() => {
+    let interval;
+    if (isResendDisabled && resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+    }
+
+    if (resendTimer === 0) {
+      setIsResendDisabled(false);
+      clearInterval(interval);
+    }
+
+    return () => clearInterval(interval);
+  }, [resendTimer, isResendDisabled]);
+
+  useEffect(() => {
+    console.log(currentStep)
+  }, [currentStep])
+
+  const sendOtpToEmail = async (email) => {
+    try {
+      const input = email.trim();
+      await supabase.auth.signInWithOtp({ email: input });
+      setCurrentStep("verify-otp");
+    } catch (err) {
+      console.error("Unexpected error sending OTP:", err);
+      return { success: false, error: "Unexpected error" };
+    }
+  };
+
+  const resendOtpToEmail = async () => {
+    try {
+      const input = email.trim(); // make sure you're using your email state
+      const { error } = await supabase.auth.signInWithOtp({
+        email: input,
+        options: {
+          shouldCreateUser: false, // don't create new users on resend
+        },
+      });
+
+      if (error) {
+        console.log("Resend OTP failed:", error.message);
+        toast.error("FAILED TO SEND OTP TRY AGAIN LATER");
+        return;
+      }
+
+      setIsResendDisabled(true);
+      setResendTimer(60);
+
+      toast.success("OTP sent again to your email.");
+    } catch (err) {
+      console.error("Unexpected error resending OTP:", err);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -86,13 +145,15 @@ const Login = () => {
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
+
     const input = email.trim();
     const newErrors = {};
 
+    // Validate email only
     if (!input) {
-      newErrors.email = 'Enter your email or mobile phone number';
-    } else if (!validateEmail(input) && !validatePhone(input)) {
-      newErrors.email = 'Enter a valid email or mobile phone number';
+      newErrors.email = 'Enter your email address';
+    } else if (!validateEmail(input)) {
+      newErrors.email = 'Enter a valid email address';
     }
 
     if (Object.keys(newErrors).length) {
@@ -101,22 +162,14 @@ const Login = () => {
     }
 
     setErrors({});
-
-    // Set the respective state for email or phone
-    if (validateEmail(input)) {
-      setEmail(input);
-      setPhone('');
-    } else {
-      setPhone(input);
-      setEmail('');
-    }
+    setEmail(input); // keep email
+    setLoading(true);
 
     try {
-      setLoading(true)
       const res = await fetch('/api/auth/check-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(validateEmail(input) ? { email: input } : { phone: input }),
+        body: JSON.stringify({ email: input }),
         redirect: 'manual',
       });
 
@@ -132,13 +185,16 @@ const Login = () => {
       if (data.exists && data.isCustomer) {
         setCurrentStep('signin');
       } else if (!data.exists) {
-        setCurrentStep('signup');
+        setOtpPurpose('signup');
+        await supabase.auth.signInWithOtp({ email: input });
+        setCurrentStep('verify-email');
       } else {
         setErrors({ email: 'This account is not a customer account.' });
       }
-      setLoading(false)
     } catch (err) {
       setErrors({ email: err.message });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -159,19 +215,39 @@ const Login = () => {
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
+
       const response = await fetch('/api/auth/login-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, phone, password }),
       });
+
       const data = await response.json();
+
+      if (response.status === 401) {
+        setErrors({ password: 'Your password is incorrect' });
+        setLoading(false);
+        return;
+      }
+
+      if (!response.ok) {
+        setErrors({ password: data.error || 'Login failed. Try again.' });
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Success
       dispatch(setUser(data.user));
-      router.push('/');
-      setLoading(false)
+      setLoading(false);
+      router.push('/')
+
     } catch (error) {
+      console.error('Login error:', error);
       setErrors({ password: 'Server error, try again later' });
+      setLoading(false);
     }
+
   };
 
   const handleSignUp = async (e) => {
@@ -256,39 +332,53 @@ const Login = () => {
     }
   };
 
-  // const handleOtpSubmit = async (e) => {
-  //   e.preventDefault();
+  const handleOtpVerify = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrors({});
 
-  //   if (!otp || otp.length !== 6) {
-  //     setErrors({ otp: 'Enter a valid 6‑digit OTP' });
-  //     return;
-  //   }
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'email',
+    });
 
-  //   try {
-  //     // 1. Ask Firebase to verify the code
-  //     await window.confirmationResult.confirm(otp);
+    if (error) {
+      setErrors({ otp: 'Invalid or expired OTP' });
+      setLoading(false);
+      return;
+    }
 
-  //     // 2. Create user in SQL DB
-  //     const res = await fetch('/api/auth/register-user', {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({ name, email, phone, password }),
-  //     });
+    if (otpPurpose === 'signup') {
+      setCurrentStep('signup');
+    } else if (otpPurpose === 'forgot-password') {
+      setCurrentStep('password'); // or 'reset-password'
+    }
 
-  //     const data = await res.json();
-  //     if (!res.ok) {
-  //       setErrors({ otp: data.error || 'Signup failed' });
-  //       return;
-  //     }
+    setLoading(false);
+  };
 
-  //     alert('Account created successfully!');
-  //     resetForm();             // back to initial step
-  //     setCurrentStep('signin'); // or redirect
-  //   } catch (err) {
-  //     console.error(err);
-  //     setErrors({ otp: 'Invalid or expired OTP' });
-  //   }
-  // };
+  const handleOtp = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrors({});
+
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'email',
+    });
+
+    if (error) {
+      setErrors({ otp: 'Invalid or expired OTP' });
+      setLoading(false);
+      return;
+    }
+
+    setCurrentStep('password'); // or 'reset-password'
+
+    setLoading(false);
+  };
 
   const resetForm = () => {
     setCurrentStep('initial');
@@ -302,10 +392,67 @@ const Login = () => {
     setShowConfirmPassword(false);
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+
+    const newErrors = {};
+
+    if (!newPass) {
+      newErrors.newPass = 'Enter your new password';
+    } else if (newPass.length < 6) {
+      newErrors.newPass = 'Password must be at least 6 characters';
+    }
+
+    if (!confirmPass) {
+      newErrors.confirmPass = 'Confirm your password';
+    } else if (newPass !== confirmPass) {
+      newErrors.confirmPass = 'Passwords do not match';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword: newPass }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 401) {
+        setErrors({ newPass: 'Session expired. Please try again.' });
+        setLoading(false);
+        return;
+      }
+
+      if (!response.ok) {
+        setErrors({ newPass: data.error || 'Password change failed. Try again.' });
+        setLoading(false);
+        return;
+      }
+
+
+      setLoading(false);
+      setCurrentStep('signin'); // or handle success as needed
+
+    } catch (error) {
+      console.error('Password change error:', error);
+      setErrors({ newPass: 'Server error, try again later' });
+      setLoading(false);
+    }
+  };
+
+
   // Initial Step - Email/Phone Entry
   if (currentStep === 'initial') {
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <button
           className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
           onClick={handleClose}
@@ -317,21 +464,22 @@ const Login = () => {
             {/* Logo */}
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold text-gray-900">NEXSTORE</h1>
-              <div className="w-20 h-1 bg-orange-400 mx-auto mt-1 rounded"></div>
+              <div className="w-40 h-1 bg-orange-400 mx-auto mt-1 rounded"></div>
             </div>
 
             {/* Form Container */}
             <div className="border border-gray-300 rounded-lg p-6">
-              <h2 className="text-xl font-medium mb-4">SIGN IN OR CREATE ACCOUNT</h2>
+
+              <h2 className="text-lg font-medium mb-4">SIGN IN OR CREATE ACCOUNT</h2>
 
               <form onSubmit={handleEmailSubmit}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ENTER MOBILE NUMBER OR EMAIL
+                  ENTER EMAIL
                 </label>
 
                 <InputField
                   type="text"
-                  placeholder=""
+                  placeholder="enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   error={errors.email}
@@ -386,7 +534,7 @@ const Login = () => {
               </div>
 
               <div className="mt-6 pt-6 border-t border-gray-300">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">BUYING FOR WORK?</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">BUYING FOR WORK ?</h3>
                 <a href="/seller-login" className="text-blue-600 hover:text-blue-800 hover:underline text-sm">
                   Create a free seller account
                 </a>
@@ -413,7 +561,7 @@ const Login = () => {
   if (currentStep === 'signin') {
     return (
 
-      <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <button
           className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
           onClick={handleClose}
@@ -467,7 +615,7 @@ const Login = () => {
                   className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {loading ? (
-                   <>
+                    <>
                       <svg
                         className="animate-spin h-5 w-5 text-white"
                         xmlns="http://www.w3.org/2000/svg"
@@ -509,9 +657,14 @@ const Login = () => {
               </div>
 
               <div className="mt-4">
-                <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline text-sm">
+                <button
+                  type="button"
+                  onClick={() => sendOtpToEmail(email)}
+
+                  className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
+                >
                   Forgot your password?
-                </a>
+                </button>
               </div>
             </div>
 
@@ -551,7 +704,7 @@ const Login = () => {
     );
   }
 
-  // Sign Up Step - Fixed the entire signup form
+  // Sign Up Step -
   if (currentStep === 'signup') {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -594,6 +747,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   error={errors.email}
+                  disabled={true}
                 />
 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -646,7 +800,7 @@ const Login = () => {
                   className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {loading ? (
-                   <>
+                    <>
                       <svg
                         className="animate-spin h-5 w-5 text-white"
                         xmlns="http://www.w3.org/2000/svg"
@@ -716,6 +870,290 @@ const Login = () => {
       </div>
     );
   }
+
+  // Email Step -
+
+  if (currentStep === 'verify-email') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <button
+          className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
+          onClick={handleClose}
+        >
+          &times;
+        </button>
+        <div className="flex-grow flex items-center justify-center p-4">
+          <div className="w-full max-w-sm">
+            {/* Logo */}
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">NEXSTORE</h1>
+              <div className="w-40 h-1 bg-orange-400 mx-auto mt-1 rounded"></div>
+            </div>
+
+            {/* Form Container */}
+            <div className="border border-gray-300 rounded-lg p-6">
+              <h2 className="text-lg font-medium mb-4">VERIFY YOUR EMAIL</h2>
+
+              <form onSubmit={handleOtpVerify}>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-4">
+                    <span className="font-medium text-gray-900">{email}</span>
+                  </p>
+                </div>
+
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ENTER VERIFICATION CODE
+                </label>
+
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="Enter OTP"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent mb-4"
+                />
+
+                <button
+                  type="submit"
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  VERIFY OTP
+                </button>
+              </form>
+
+              <div className="mt-4 text-xs text-gray-600">
+                By continuing, you agree to Nexstore's{' '}
+                <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">
+                  Conditions of Use
+                </a>{' '}
+                and{' '}
+                <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">
+                  Privacy Notice
+                </a>
+                .
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-300">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">DIDN'T RECEIVE THE CODE?</h3>
+                <button
+                  onClick={resendOtpToEmail}
+                  type="button"
+                  disabled={isResendDisabled}
+                  className={`text-sm ${isResendDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800 hover:underline'}`}
+                >
+                  Resend verification code
+                  {isResendDisabled && <span> ({resendTimer}s)</span>}
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center mt-8 text-xs text-gray-500 space-x-4">
+              <a href="#" className="hover:text-blue-600">Conditions of Use</a>
+              <a href="#" className="hover:text-blue-600">Privacy Notice</a>
+              <a href="#" className="hover:text-blue-600">Help</a>
+            </div>
+            <div className="text-center mt-2 text-xs text-gray-500">
+              © 2025, Nexstore.com, Inc. or its affiliates
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Password Steps-
+  if (currentStep === 'verify-otp') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <button
+          className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
+          onClick={handleClose}
+        >
+          &times;
+        </button>
+        <div className="flex-grow flex items-center justify-center p-4">
+          <div className="w-full max-w-sm">
+            {/* Logo */}
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">NEXSTORE</h1>
+              <div className="w-40 h-1 bg-orange-400 mx-auto mt-1 rounded"></div>
+            </div>
+
+            {/* Form Container */}
+            <div className="border border-gray-300 rounded-lg p-6">
+              <h2 className="text-lg font-medium mb-4">PASSWORD CHANGE</h2>
+
+              <form onSubmit={handleOtp}>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-4">
+                    <span className="font-medium text-gray-900">{email}</span>
+                  </p>
+                </div>
+
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ENTER VERIFICATION CODE
+                </label>
+
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="Enter OTP"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent mb-4"
+                />
+
+                <button
+                  type="submit"
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  VERIFY OTP
+                </button>
+              </form>
+
+              <div className="mt-4 text-xs text-gray-600">
+                By continuing, you agree to Nexstore's{' '}
+                <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">
+                  Conditions of Use
+                </a>{' '}
+                and{' '}
+                <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">
+                  Privacy Notice
+                </a>
+                .
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-300">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">DIDN'T RECEIVE THE CODE?</h3>
+                <button
+                  onClick={resendOtpToEmail}
+                  type="button"
+                  disabled={isResendDisabled}
+                  className={`text-sm ${isResendDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800 hover:underline'}`}
+                >
+                  Resend verification code
+                  {isResendDisabled && <span> ({resendTimer}s)</span>}
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center mt-8 text-xs text-gray-500 space-x-4">
+              <a href="#" className="hover:text-blue-600">Conditions of Use</a>
+              <a href="#" className="hover:text-blue-600">Privacy Notice</a>
+              <a href="#" className="hover:text-blue-600">Help</a>
+            </div>
+            <div className="text-center mt-2 text-xs text-gray-500">
+              © 2025, Nexstore.com, Inc. or its affiliates
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentStep === 'password') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <button
+          className="fixed top-4 right-4 z-50 text-gray-600 hover:text-black text-2xl font-bold focus:outline-none"
+          onClick={handleClose}
+        >
+          &times;
+        </button>
+        <div className="flex-grow flex items-center justify-center p-4">
+          <div className="w-full max-w-sm">
+            {/* Logo */}
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">NEXSTORE</h1>
+              <div className="w-40 h-1 bg-orange-400 mx-auto mt-1 rounded"></div>
+            </div>
+
+            {/* Form Container */}
+            <div className="border border-gray-300 rounded-lg p-6">
+              <h2 className="text-lg font-medium mb-4">PASSWORD CHANGE</h2>
+
+              <form onSubmit={handlePasswordChange}>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-4">
+                    <span className="font-medium text-gray-900">{email}</span>
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      NEW PASSWORD
+                    </label>
+                    <input
+                      type="password"
+                      value={newPass}
+                      onChange={(e) => setNewPass(e.target.value)}
+                      placeholder="Enter new password"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CONFIRM PASSWORD
+                    </label>
+                    <input
+                      type="password"
+                      value={confirmPass}
+                      onChange={(e) => setConfirmPass(e.target.value)}
+                      placeholder="Confirm new password"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full mt-6 bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  CHANGE PASSWORD
+                </button>
+              </form>
+
+              <div className="mt-4 text-xs text-gray-600">
+                By continuing, you agree to Nexstore's{' '}
+                <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">
+                  Conditions of Use
+                </a>{' '}
+                and{' '}
+                <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">
+                  Privacy Notice
+                </a>
+                .
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-300">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">NEED HELP?</h3>
+                <button
+                  type="button"
+                  className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
+                >
+                  Contact customer support
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center mt-8 text-xs text-gray-500 space-x-4">
+              <a href="#" className="hover:text-blue-600">Conditions of Use</a>
+              <a href="#" className="hover:text-blue-600">Privacy Notice</a>
+              <a href="#" className="hover:text-blue-600">Help</a>
+            </div>
+            <div className="text-center mt-2 text-xs text-gray-500">
+              © 2025, Nexstore.com, Inc. or its affiliates
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   // Default return (shouldn't reach here)
   return null;

@@ -57,17 +57,22 @@ const Navbar = ({ notFixed = false }) => {
         };
         const fetchCartItemCount = async () => {
             try {
-                const res = await fetch('api/cart/items', { credentials: 'include' });
-                const data = await res.json()
+                const res = await fetch('/api/cart/items', { credentials: 'include' });
 
-                if (res.ok) {
-                    setCartItemCount(data.cartItemCount)
+                if (res.status === 204) {
+                    setCartItemCount(0);
+                    return;
                 }
 
+                const data = await res.json();
+
+                if (res.ok) {
+                    setCartItemCount(data.cartItemCount);
+                }
             } catch (err) {
                 console.error('Fetch error:', err);
             }
-        }
+        };
         if (user) {
             fetchAddresses();
             fetchCartItemCount();
