@@ -84,7 +84,7 @@ export async function GET(req) {
                     : 0;
 
             return {
-                name: `${variant?.product.title} (${variant?.varianttitle})`,
+                name: `${variant?.product.title} (${variant?.variantName})`,
                 sales: item._sum.quantity || 0,
                 revenue: currRevenue,
                 growth: parseFloat(growth.toFixed(2)),

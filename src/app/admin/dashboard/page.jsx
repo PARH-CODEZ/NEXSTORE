@@ -10,11 +10,13 @@ const Dashboard = () => {
   const [categoryData, setCategoryData] = useState([])
   const [paymentStatusData, setPaymentStatusData] = useState([])
   const [topSellers, setTopSellers] = useState([])
-  const [topProducts,setTopProducts] = useState([])
+  const [topProducts, setTopProducts] = useState([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     async function fetchStats() {
       try {
+        setLoading(true)
         const res = await fetch('/api/admin/dashboard?range=${timeRange}');
         const data = await res.json();
         console.log(data)
@@ -24,6 +26,7 @@ const Dashboard = () => {
         setPaymentStatusData(data.paymentStatusData)
         setTopSellers(data.topSellers)
         setTopProducts(data.productResult)
+        setLoading(false)
       } catch (error) {
         console.error('Failed to fetch dashboard stats:', error);
       }
@@ -31,16 +34,6 @@ const Dashboard = () => {
 
     fetchStats();
   }, [timeRange]);
-
-
-  // const topProducts = [
-  //   { name: 'iPhone 15 Pro', sales: 1250, revenue: 1247500, growth: 12.5 },
-  //   { name: 'MacBook Air M2', sales: 890, revenue: 1068000, growth: 8.3 },
-  //   { name: 'Samsung Galaxy S24', sales: 756, revenue: 680400, growth: -3.2 },
-  //   { name: 'AirPods Pro', sales: 1420, revenue: 355000, growth: 15.7 },
-  //   { name: 'iPad Air', sales: 634, revenue: 380400, growth: 6.8 }
-  // ];
-
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -68,7 +61,7 @@ const Dashboard = () => {
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 ${loading ? 'skeleton' : ''} `}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 uppercase">Total Revenue</p>
@@ -94,7 +87,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 ${loading ? 'skeleton' : ''} `}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 uppercase">Total Orders</p>
@@ -120,7 +113,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 ${loading ? 'skeleton' : ''} `}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 uppercase">Active Customers</p>
@@ -146,7 +139,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 ${loading ? 'skeleton' : ''} `}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 uppercase">Products Sold</p>
@@ -179,7 +172,7 @@ const Dashboard = () => {
 
 
         {/* Revenue & Orders Chart */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 ${loading ? 'skeleton' : ''}`}>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 uppercase">Revenue & Orders Trend</h3>
             <div className="flex items-center space-x-4 text-sm">
@@ -213,7 +206,7 @@ const Dashboard = () => {
         </div>
 
         {/* Category Distribution */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 ${loading ? 'skeleton' : ''}`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 uppercase">Sales by Category</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -244,7 +237,7 @@ const Dashboard = () => {
 
 
         {/* Payment Status trends*/}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 ${loading ? 'skeleton' : ''}`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 uppercase">Payment Status Trends</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={paymentStatusData}>
@@ -269,7 +262,7 @@ const Dashboard = () => {
 
 
         {/*Top Sellers*/}
-        <div className="bg-white h-[400px] rounded-xl shadow-sm border border-gray-200 overflow-y-auto">
+        <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-200 ${loading ? 'skeleton' : ''}`}>
           <div className="p-6 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 uppercase">Top Sellers</h3>
           </div>
@@ -298,7 +291,7 @@ const Dashboard = () => {
 
 
       {/* Top Products Table */}
-      <div className="bg-white  rounded-xl shadow-sm border border-gray-200 mb-8">
+      <div className={`bg-white  rounded-xl shadow-sm border border-gray-200 mb-8 ${loading ? 'skeleton' : ''}`}>
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 uppercase">Top Performing Products</h3>
         </div>
@@ -353,7 +346,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
 
         {/* Performance Insights */}
-        <div className="bg-white rounded-xl w-[100%] shadow-sm p-6 border border-gray-200">
+        <div className={`bg-white  rounded-xl shadow-sm border border-gray-200 mb-8 ${loading ? 'skeleton' : ''}`}>
           <h3 className=" text-lg font-semibold text-gray-900 mb-4 uppercase">Performance Insights</h3>
           <div className="space-y-4">
             <div className="border-l-4 border-green-500 pl-4">

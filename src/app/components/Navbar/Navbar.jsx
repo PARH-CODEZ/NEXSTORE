@@ -19,6 +19,7 @@ const Navbar = ({ notFixed = false }) => {
     const [defaultCity, setDefaultCity] = useState('');
     const [defaultPostalCode, setDefaultPostalCode] = useState('');
     const [isSidebarOpen, setSidebarOpen] = useState(false);
+    const [cartItemCount, setCartItemCount] = useState(0)
     const user = useSelector((state) => state.user.user);
 
     useEffect(() => {
@@ -31,6 +32,7 @@ const Navbar = ({ notFixed = false }) => {
             setSearchTerm(formatted);
         }
     }, [pathname]);
+
     useEffect(() => {
         const fetchAddresses = async () => {
             try {
@@ -53,8 +55,22 @@ const Navbar = ({ notFixed = false }) => {
                 setLoading(false);
             }
         };
+        const fetchCartItemCount = async () => {
+            try {
+                const res = await fetch('api/cart/items', { credentials: 'include' });
+                const data = await res.json()
+
+                if (res.ok) {
+                    setCartItemCount(data.cartItemCount)
+                }
+
+            } catch (err) {
+                console.error('Fetch error:', err);
+            }
+        }
         if (user) {
             fetchAddresses();
+            fetchCartItemCount();
         }
     }, []);
 
@@ -363,7 +379,7 @@ const Navbar = ({ notFixed = false }) => {
                                 <div className="relative flex items-center px-2 py-1 hover:bg-gray-800 rounded cursor-pointer">
                                     <ShoppingCart size={25} />
                                     <span className="absolute -top-0 -right-1 bg-[#FF9900] text-gray-900 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                                        0
+                                        {cartItemCount}
                                     </span>
                                     <span className="ml-1 font-semibold hidden sm:inline md:hidden lg:block">CART</span>
                                 </div>
