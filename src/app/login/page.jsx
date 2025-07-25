@@ -87,9 +87,6 @@ const Login = () => {
     return () => clearInterval(interval);
   }, [resendTimer, isResendDisabled]);
 
-  useEffect(() => {
-    console.log(currentStep)
-  }, [currentStep])
 
   const sendOtpToEmail = async (email) => {
     try {
@@ -104,27 +101,27 @@ const Login = () => {
 
   const resendOtpToEmail = async () => {
     try {
-      const input = email.trim(); // make sure you're using your email state
+      const input = email.trim(); // using the email state
       const { error } = await supabase.auth.signInWithOtp({
         email: input,
         options: {
-          shouldCreateUser: false, // don't create new users on resend
+          shouldCreateUser: false,
         },
       });
 
       if (error) {
         console.log("Resend OTP failed:", error.message);
-        toast.error("FAILED TO SEND OTP TRY AGAIN LATER");
+        setErrors({ otp: 'Failed to send OTP. Try again later.' });
         return;
       }
 
+      setErrors({});
       setIsResendDisabled(true);
       setResendTimer(60);
-
-      toast.success("OTP sent again to your email.");
+      toast.success("OTP SENT AGAIN.");
     } catch (err) {
       console.error("Unexpected error resending OTP:", err);
-      toast.error("Something went wrong. Please try again.");
+      setErrors({ otp: 'Something went wrong. Please try again.' });
     }
   };
 
@@ -904,20 +901,46 @@ const Login = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   ENTER VERIFICATION CODE
                 </label>
-
-                <input
+                <InputField
                   type="text"
+                  placeholder="Enter OTP"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  placeholder="Enter OTP"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent mb-4"
+                  error={errors.otp}
                 />
 
                 <button
                   type="submit"
-                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  disabled={loading}
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  VERIFY OTP
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      <span className="ml-2">VERIFYING OTP</span>
+                    </>
+                  ) : (
+                    "VERIFY OTP"
+                  )}
                 </button>
               </form>
 
@@ -995,19 +1018,46 @@ const Login = () => {
                   ENTER VERIFICATION CODE
                 </label>
 
-                <input
+                <InputField
                   type="text"
+                  placeholder="Enter OTP"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  placeholder="Enter OTP"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent mb-4"
+                  error={errors.otp}
                 />
 
                 <button
                   type="submit"
-                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  disabled={loading}
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  VERIFY OTP
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      <span className="ml-2">VERIFYING OTP</span>
+                    </>
+                  ) : (
+                    "VERIFY OTP"
+                  )}
                 </button>
               </form>
 
@@ -1110,9 +1160,36 @@ const Login = () => {
 
                 <button
                   type="submit"
-                  className="w-full mt-6 bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  disabled={loading}
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  CHANGE PASSWORD
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8z"
+                        />
+                      </svg>
+                      <span className="ml-2">LOADING...</span>
+                    </>
+                  ) : (
+                    "CHANGE PASSWORD"
+                  )}
                 </button>
               </form>
 
