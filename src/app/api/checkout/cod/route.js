@@ -88,7 +88,9 @@ export async function POST(req) {
                 shippingFee: new Prisma.Decimal(shippingFee),
                 subtotal: new Prisma.Decimal(subtotal),
                 totalAmount: new Prisma.Decimal(totalPrice),
-                paymentMethod: "cod", // ✅ COD
+                paymentMethod: "cod",
+                paymentStatus: "PENDING",
+                status: "CONFIRMED",
                 items: {
                     create: itemsWithPrices.map((item) => ({
                         variantId: item.variantId,
@@ -101,12 +103,32 @@ export async function POST(req) {
                 payments: {
                     create: {
                         amount: new Prisma.Decimal(totalPrice),
-                        status: "PENDING", // COD remains pending
+                        status: "PENDING",
                         method: "cod",
                     },
                 },
             },
         });
+
+        // Now create order status history and shipment in parallel
+        await Promise.all([
+            prisma.orderStatusHistory.create({
+                data: {
+                    orderId: order.id,
+                    status: 'CONFIRMED',
+                    note: 'Auto-confirmed after COD order placement',
+                    updatedBy: null,
+                },
+            }),
+            prisma.shipment.create({
+                data: {
+                    orderId: order.id,
+                    courierName: 'To be assigned',
+                    status: 'PENDING',
+                },
+            }),
+        ]);
+
 
         return NextResponse.json({ success: true, orderId: order.id });
     } catch (error) {

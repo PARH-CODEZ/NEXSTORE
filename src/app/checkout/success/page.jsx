@@ -19,19 +19,81 @@ export default function CheckoutSuccess() {
   const [showModal, setShowModal] = useState(false);
   const [updated, setUpdated] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [isEmpty, setIsEmpty] = useState(false);
+
+  const fetchOrderDetails = async (orderId) => {
+    try {
+      setLoading(true);
+      setIsEmpty(false);
+
+      const res = await fetch(`/api/order/${orderId}`);
+      if (!res.ok) throw new Error("Order not found");
+
+      const data = await res.json();
+      if (!data || !data.id) throw new Error("Invalid data");
+
+      console.log(data);
+      setOrder(data);
+      setItems(data.items);
+    } catch (err) {
+      setIsEmpty(true);
+      setOrder(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (orderId) {
-      setLoading(true)
-      fetch(`/api/order/${orderId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setOrder(data);
-          setItems(data.items); // ✅ use data directly here
-          setLoading(false)
-        });
+      fetchOrderDetails(orderId);
     }
   }, [orderId, updated]);
+
+
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/order/${orderId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+
+      fetchOrderDetails(orderId);
+      setLoading(false)
+      // Optionally refresh UI here
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      setLoading(false)
+      // Optionally show a toast or error message
+    }
+  };
+
+
+  if (isEmpty) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-20 bg-white">
+        <h1 className="text-xl md:text-3xl font-semibold text-gray-800 mb-2 uppercase">
+          Order Not Found
+        </h1>
+        <p className="text-gray-600 text-sm md:text-base max-w-md mb-6">
+          We couldn’t find your order.
+        </p>
+        <button
+          className="px-6 py-2 bg-yellow-400 text-black font-medium rounded-md hover:bg-yellow-500 transition uppercase text-sm md:text-base"
+          onClick={() => router.push("/")}
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
 
 
   if (!order) {
@@ -72,6 +134,7 @@ export default function CheckoutSuccess() {
   }, 0);
 
   const ORDER_PROGRESS_FLOW = [
+    "PENDING",        // ⬅️ Add this as the initial state
     "CONFIRMED",
     "PACKED",
     "SHIPPED",
@@ -79,9 +142,10 @@ export default function CheckoutSuccess() {
     "DELIVERED",
   ];
 
-
   const formatStatusToTitle = (status) => {
     switch (status) {
+      case "PENDING":
+        return "Pending ";
       case "CONFIRMED":
         return "Order Confirmed";
       case "PACKED":
@@ -93,9 +157,10 @@ export default function CheckoutSuccess() {
       case "DELIVERED":
         return "Delivered";
       default:
-        return status; // fallback
+        return status;
     }
   };
+
 
   const now = new Date();
 
@@ -103,17 +168,23 @@ export default function CheckoutSuccess() {
   const existingSteps = order.history.reduce((acc, h) => {
     acc[h.status] = new Date(h.timestamp);
     return acc;
-  }, {}); // { CONFIRMED: Date, PACKED: Date, ... }
+  }, {});
 
-  const steps = ORDER_PROGRESS_FLOW.map((status) => {
+  // Ensure current status is included in steps even if not in history
+  if (order.status && !existingSteps[order.status]) {
+    existingSteps[order.status] = new Date(order.placedAt); // or new Date()
+  }
+
+  const currentStatusIndex = ORDER_PROGRESS_FLOW.indexOf(order.status || "PENDING");
+
+  const steps = ORDER_PROGRESS_FLOW.map((status, index) => {
+    const isReached = index <= currentStatusIndex;
     return {
       status,
       title: formatStatusToTitle(status),
-      date: existingSteps[status] || null, // null means it's a future step
+      date: isReached ? (existingSteps[status] || new Date(order.placedAt)) : null,
     };
   });
-
-
 
 
   const formatDate = (date) =>
@@ -271,59 +342,61 @@ export default function CheckoutSuccess() {
               <h3 className="font-semibold text-gray-900 mb-6 text-lg uppercase">
                 Track your package
               </h3>
-              {["CANCELLED", "RETURN_REQUESTED", "RETURNED"].includes(order.status) && (
-                <div className={`p-4 rounded-md mb-6 uppercase font-semibold text-sm
-                 ${order.status === "CANCELLED" ? "bg-red-100 text-red-800" : ""}
-                ${order.status === "RETURN_REQUESTED" ? "bg-yellow-100 text-yellow-800" : ""}
-                 ${order.status === "RETURNED" ? "bg-green-100 text-green-800" : ""}
-                  `}>
+
+              {["CANCELLED", "RETURN_REQUESTED", "RETURNED"].includes(order.status) ? (
+                <div
+                  className={`p-4 rounded-md mb-6 uppercase font-semibold text-sm
+        ${order.status === "CANCELLED" ? "bg-red-100 text-red-800" : ""}
+        ${order.status === "RETURN_REQUESTED" ? "bg-yellow-100 text-yellow-800" : ""}
+        ${order.status === "RETURNED" ? "bg-green-100 text-green-800" : ""}`}
+                >
                   Order {order.status.replaceAll("_", " ").toLowerCase()}
                 </div>
+              ) : (
+                <div className="relative ml-4">
+                  {steps.map((step, index) => {
+                    const isCompleted = step.date && now >= step.date;
+                    const isLast = index === steps.length - 1;
+
+                    return (
+                      <div key={index} className="relative flex items-start pb-8">
+                        {/* Vertical Line */}
+                        {!isLast && (
+                          <span
+                            className={`absolute left-1.5 top-3 h-full w-[3px] z-0 ${isCompleted ? "bg-green-500" : "bg-gray-300"
+                              }`}
+                          />
+                        )}
+
+                        {/* Dot */}
+                        <div className="relative z-10">
+                          <span
+                            className={`w-4 h-4 rounded-full block border-2 ${isCompleted
+                              ? "bg-green-500 border-green-500"
+                              : "bg-white border-gray-300"
+                              }`}
+                          />
+                        </div>
+
+                        {/* Content */}
+                        <div className="ml-4">
+                          <p
+                            className={`text-md font-medium uppercase ${isCompleted ? "text-gray-900" : "text-gray-500"
+                              }`}
+                          >
+                            {step.title}
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            {step.date
+                              ? format(step.date, "MMMM dd, yyyy - hh:mm a")
+                              : "Pending"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
-
-              <div className="relative ml-4">
-                {steps.map((step, index) => {
-                  const isCompleted = step.date && now >= step.date;
-                  const isLast = index === steps.length - 1;
-
-                  return (
-                    <div key={index} className="relative flex items-start pb-8">
-                      {/* Vertical Line */}
-                      {(!isLast) && (
-                        <span
-                          className={`absolute left-1.5 top-3 h-full w-[3px] z-0 ${isCompleted ? "bg-green-500" : "bg-gray-300"
-                            }`}
-                        />
-                      )}
-
-                      {/* Dot */}
-                      <div className="relative z-10">
-                        <span
-                          className={`w-4 h-4 rounded-full block border-2 ${isCompleted
-                            ? "bg-green-500 border-green-500"
-                            : "bg-white border-gray-300"
-                            }`}
-                        />
-                      </div>
-
-                      {/* Content */}
-                      <div className="ml-4">
-                        <p
-                          className={`text-md font-medium uppercase ${isCompleted ? "text-gray-900" : "text-gray-500"
-                            }`}
-                        >
-                          {step.title}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          {step.date
-                            ? format(step.date, "MMMM dd, yyyy - hh:mm a")
-                            : "Pending"}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
 
 
@@ -332,23 +405,26 @@ export default function CheckoutSuccess() {
             <div className="bg-white shadow-xl rounded-md p-6 uppercase">
               <h3 className="font-semibold text-gray-900 mb-4">Need help with your order?</h3>
               <div className="grid md:grid-cols-2 gap-4">
-                {isDelivered ? (
-
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    <span className="font-medium text-gray-900 uppercase">Return items</span>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
-                  </button>
-                ) : (
-
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    <span className="font-medium text-gray-900 uppercase">Cancel items</span>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
-                  </button>
+                {!["CANCELLED", "RETURN_REQUESTED", "RETURNED"].includes(order.status) && (
+                  isDelivered ? (
+                    <button
+                      onClick={() => handleStatusUpdate(order.id, "RETURN_REQUESTED")}
+                      className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <span className="font-medium text-gray-900 uppercase">Return items</span>
+                      <ArrowRight className="w-4 h-4 text-gray-400" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleStatusUpdate(order.id, "CANCELLED")}
+                      className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <span className="font-medium text-gray-900 uppercase">Cancel items</span>
+                      <ArrowRight className="w-4 h-4 text-gray-400" />
+                    </button>
+                  )
                 )}
+
                 <button className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                   <span className="font-medium text-gray-900 uppercase">NEED HELP WITH ORDER ?</span>
                   <ArrowRight className="w-4 h-4 text-gray-400" />

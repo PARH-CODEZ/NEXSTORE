@@ -266,7 +266,7 @@ const CheckoutUI = () => {
 
     const updatedPaymentMethods = paymentMethods.map((method) => {
         if (method.id === 'cod') {
-            return { ...method, disabled: subtotal > 1000000 };
+            return { ...method, disabled: subtotal > 10000 };
         }
         return { ...method, disabled: false };
     });

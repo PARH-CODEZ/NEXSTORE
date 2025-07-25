@@ -78,6 +78,8 @@ export async function GET(req) {
       const status = order.status ?? "PENDING";
       const trackingNumber = order.shipments?.[0]?.trackingNumber ?? null;
       const amount = order.payments?.[0]?.amount?.toFixed(2) ?? "0.00";
+      const paymentStatus = order.paymentStatus ?? "PENDING";
+
 
       return {
         id: order.id,
@@ -87,6 +89,7 @@ export async function GET(req) {
         quantity,
         amount,
         status,
+        paymentStatus, // <=== include in response
         orderDate: new Date(order.createdAt).toISOString().split("T")[0],
         shippingAddress: `${order.shippingAddress?.addressLine1 ?? ""}, ${order.shippingAddress?.city ?? ""
           }, ${order.shippingAddress?.postalCode ?? ""}`,
@@ -94,6 +97,7 @@ export async function GET(req) {
           ["SHIPPED", "DELIVERED"].includes(status) ? trackingNumber : null,
       };
     });
+
 
     return NextResponse.json({
       orders: formattedOrders,

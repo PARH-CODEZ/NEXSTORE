@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Download, Eye, Package, Truck, CheckCircle, XCircle, Clock, AlertCircle, ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal, Mail, Phone, MapPin, Calendar, DollarSign, ArrowUpCircle, ShoppingBag, MoveRight } from "lucide-react";
+import { Search, Filter, Download, Eye, Package, Truck, CheckCircle, XCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Phone, MapPin, DollarSign, ArrowUpCircle, ShoppingBag, MoveRight, Loader, } from "lucide-react";
 import CategoryNav from '../components/Categories/Categories';
 import Navbar from '../components/Navbar/Navbar';
 import FullScreenLoader from '../components/FullScreenLoader/FullScreenLoader';
@@ -152,6 +152,39 @@ const OrderManagement = () => {
         : [...prev, orderId]
     );
   };
+
+
+  function getPaymentStatusIcon(status) {
+    switch (status?.toUpperCase()) {
+      case 'PAID':
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'PENDING':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'FAILED':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'REFUNDED':
+        return <AlertCircle className="w-4 h-4 text-blue-500" />;
+      default:
+        return <Loader className="w-4 h-4 text-gray-400 animate-spin" />;
+    }
+  }
+
+
+
+  function getPaymentStatusColor(status) {
+    switch (status?.toUpperCase()) {
+      case 'PAID':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'FAILED':
+        return 'bg-red-100 text-red-800 border-red-300';
+      case 'REFUNDED':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  }
 
   const handleSelectAll = () => {
     const currentPageOrders = getCurrentPageOrders();
@@ -502,7 +535,7 @@ const OrderManagement = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -568,11 +601,14 @@ const OrderManagement = () => {
 
 
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order?.status)}`}>
-                            {getStatusIcon(order?.status)}
-                            <span className="ml-1 capitalize">{order?.status || 'unknown'}</span>
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getPaymentStatusColor(order?.paymentStatus)}`}
+                          >
+                            {getPaymentStatusIcon(order?.paymentStatus)}
+                            <span className="ml-1 capitalize">{order?.paymentStatus || 'Unknown'}</span>
                           </span>
                         </td>
+
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">${order?.amount || '0.00'}</div>
                         </td>

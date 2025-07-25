@@ -39,6 +39,7 @@ export async function POST(req) {
         }
 
         try {
+            // ✅ Update payment record
             await prisma.payment.updateMany({
                 where: { orderId },
                 data: {
@@ -48,13 +49,35 @@ export async function POST(req) {
                 },
             });
 
-            await prisma.order.update({
-                where: { id: orderId },
-                data: {
-                    paymentStatus: 'SUCCESS',
-                    status: 'CONFIRMED',
-                },
-            });
+            // ✅ Update order and insert CONFIRMED into history + shipment
+            await prisma.$transaction([
+                prisma.order.update({
+                    where: { id: orderId },
+                    data: {
+                        paymentStatus: 'SUCCESS',
+                        status: 'CONFIRMED',
+                    },
+                }),
+
+                await prisma.orderStatusHistory.create({
+                    data: {
+                        orderId,
+                        status: 'CONFIRMED',       // enum OrderStatus
+                        note: 'Auto-confirmed after successful payment', // optional
+                        updatedBy: null,           // optional (null if system-triggered)
+                        timestamp: new Date(),     // optional since default(now()) is set
+                    },
+                }),
+                ,
+
+                prisma.shipment.create({
+                    data: {
+                        orderId,
+                        courierName: 'To be assigned', // You can update later
+                        status: 'PENDING',
+                    },
+                }),
+            ]);
 
             console.log(`✅ Payment successful. Order #${orderId} updated.`);
         } catch (err) {
@@ -62,6 +85,7 @@ export async function POST(req) {
             return new Response('DB update error', { status: 500 });
         }
     }
+
     if (event.type === 'checkout.session.expired' || event.type === 'payment_intent.payment_failed') {
         const session = event.data.object;
         const orderId = parseInt(session.metadata?.orderId);
