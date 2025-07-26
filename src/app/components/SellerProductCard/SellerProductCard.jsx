@@ -71,7 +71,7 @@ const ProductCard = ({ products = [], onUpdate }) => {
     const handleDelete = async (productId) => {
         if (!confirm('CONFIRM DELETE PRODUCT ?')) return;
         try {
-            const res = await fetch(`/api/products?id=${id}`, {
+            const res = await fetch(`/api/products?id=${productId}`, {
                 method: 'DELETE',
             });
             if (!res.ok) throw new Error('Failed to delete');

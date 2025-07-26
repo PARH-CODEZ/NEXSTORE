@@ -163,7 +163,7 @@ const BrandPage = () => {
                                         </div>
 
                                         {/* Brand Name */}
-                                        <h3 className="text-lg font-bold text-gray-900 text-center line-clamp-1 mb-2 group-hover:text-purple-600 transition-colors uppercase">
+                                        <h3 className="text-md font-semibold text-gray-900 text-center line-clamp-1 mb-2 group-hover:text-purple-600 transition-colors uppercase">
                                             {brand.name}
                                         </h3>
 

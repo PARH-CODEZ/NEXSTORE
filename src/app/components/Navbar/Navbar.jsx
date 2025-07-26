@@ -1,14 +1,12 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import FullScreenLoader from '../FullScreenLoader/FullScreenLoader';
 import MobileSidebar from '../MobileSidebar/MobileSidebar';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { Search, MapPin, ShoppingCart, Globe, User } from 'lucide-react';
+import { Search, MapPin, ShoppingCart, Globe, User ,Truck} from 'lucide-react';
 import AccountModal from '../AccountModal/AccountModal';
 import Link from 'next/link';
-
 
 
 const Navbar = ({ notFixed = false }) => {
@@ -280,7 +278,7 @@ const Navbar = ({ notFixed = false }) => {
                                                     className="px-3 py-3 hover:bg-gray-100 cursor-pointer rounded"
                                                     onClick={() => handleSelectCategory(cat)}
                                                 >
-                                                    <div className="text-lg font-bold text-purple-700 uppercase">
+                                                    <div className="text-md font-semibold text-purple-700 uppercase">
                                                         {cat.name}
                                                     </div>
                                                     {cat.description && (
@@ -305,7 +303,7 @@ const Navbar = ({ notFixed = false }) => {
                                                     className="px-3 py-3 hover:bg-gray-100 cursor-pointer rounded"
                                                     onClick={() => handleSelectProduct(prod)}
                                                 >
-                                                    <div className="text-lg font-semibold text-purple-500 uppercase">
+                                                    <div className="text-md font-semibold text-purple-500 uppercase">
                                                         {truncateName(prod.name, 20)}
                                                     </div>
 
@@ -380,15 +378,25 @@ const Navbar = ({ notFixed = false }) => {
                             </div>
 
                             {/* Cart */}
-                            <Link href={'/cart'}>
-                                <div className="relative flex items-center px-2 py-1 hover:bg-gray-800 rounded cursor-pointer">
-                                    <ShoppingCart size={25} />
-                                    <span className="absolute -top-0 -right-1 bg-[#FF9900] text-gray-900 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                                        {cartItemCount}
-                                    </span>
-                                    <span className="ml-1 font-semibold hidden sm:inline md:hidden lg:block">CART</span>
-                                </div>
-                            </Link>
+                            {user?.role === 'seller' ? (
+                                <Link href="/seller-orders">
+                                    <div className="relative flex items-center px-2 py-1 hover:bg-gray-800 rounded cursor-pointer">
+                                        <Truck size={25} />
+                                        <span className="ml-1 font-semibold hidden sm:inline md:hidden lg:block">ORDERS</span>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <Link href="/cart">
+                                    <div className="relative flex items-center px-2 py-1 hover:bg-gray-800 rounded cursor-pointer">
+                                        <ShoppingCart size={25} />
+                                        <span className="absolute -top-0 -right-1 bg-[#FF9900] text-gray-900 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                                            {cartItemCount}
+                                        </span>
+                                        <span className="ml-1 font-semibold hidden sm:inline md:hidden lg:block">CART</span>
+                                    </div>
+                                </Link>
+                            )}
+
                         </div>
 
                     </div>

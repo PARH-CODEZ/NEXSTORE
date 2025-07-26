@@ -37,6 +37,7 @@ export default function ShoppingCart() {
                 setEmpty(true);
                 localStorage.removeItem('checkoutItems');
             } else {
+                console.log(data)
                 setCartItems(data.items);
 
                 // ✅ Create selected map
@@ -231,11 +232,12 @@ export default function ShoppingCart() {
                                                                 src={item.variant.images?.[0]?.imageUrl || '/placeholder.jpg'}
                                                                 alt={product.name}
                                                                 className="w-32 h-32 sm:w-40 sm:h-40 object-contain bg-gray-100 rounded-lg"
+                                                                onClick={() => router.push(`/products/${item.variant.product.id}`)}
                                                             />
                                                         </div>
 
                                                         <div className="flex-1 min-w-0">
-                                                            <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2 uppercase cursor-pointer " onClick={() => router.push(`/products/${item.variant.productId}`)}>
+                                                            <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2 uppercase cursor-pointer " onClick={() => router.push(`/products/${item.variant.product.id}`)}>
                                                                 {product.name}
                                                             </h3>
 

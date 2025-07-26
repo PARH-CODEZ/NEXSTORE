@@ -17,7 +17,6 @@ const ProductListingForm = () => {
     const [loading, setLoading] = useState(false)
     const [categories, setCategories] = useState([]);
     const [brands, setBrands] = useState([]);
-
     async function fetchCategories() {
         try {
             setLoading(true)
@@ -70,7 +69,7 @@ const ProductListingForm = () => {
     }, []);
 
 
-  
+
 
 
     const [showModal, setShowModal] = useState(false);
@@ -377,6 +376,7 @@ const ProductListingForm = () => {
     const handleSubmit = async () => {
         if (validateForm()) {
             try {
+                setLoading(true)
                 console.log(formData)
                 const response = await fetch('/api/products', {
                     method: 'POST',
@@ -392,11 +392,13 @@ const ProductListingForm = () => {
 
                 const result = await response.json();
                 console.log('Product created:', result);
-
+                setLoading(false)
                 setIsSubmitted(true);
+
             } catch (error) {
                 console.error(error);
                 alert('Error submitting product: ' + error.message);
+                setLoading(false)
             }
         }
     };
@@ -588,59 +590,6 @@ const ProductListingForm = () => {
                                     />
                                 </div>
                             </div>
-
-                            {/* Product Images */}
-                            <div className="border-b pb-6">
-                                <h2 className="text-lg font-semibold mb-4 flex items-center uppercase">
-                                    <ImageIcon className="mr-2 text-blue-500" />
-                                    Product Images *
-                                </h2>
-
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                    {formData.images.map((image, index) => (
-                                        <div key={index} className="relative group">
-                                            <img
-                                                src={image.imageUrl}
-                                                alt={`Product ${index + 1}`}
-                                                className="w-full h-32 object-cover rounded-lg border"
-                                            />
-                                            {image.isPrimary && (
-                                                <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 uppercase py-1 rounded">
-                                                    Primary
-                                                </span>
-                                            )}
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData(prev => ({
-                                                    ...prev,
-                                                    images: prev.images.filter((_, i) => i !== index)
-                                                }))}
-                                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                                    <input
-                                        type="file"
-                                        multiple
-                                        accept="image/*"
-                                        onChange={(e) => handleImageUpload(Array.from(e.target.files))}
-                                        className="hidden"
-                                        id="product-images"
-                                    />
-                                    <label htmlFor="product-images" className="cursor-pointer">
-                                        <Upload className="mx-auto mb-2 text-gray-400" size={32} />
-                                        <p className="text-gray-600">Click to upload images or drag and drop</p>
-                                        <p className="text-sm text-gray-400 mt-1">PNG, JPG up to 10MB each</p>
-                                    </label>
-                                </div>
-                                {errors.images && <p className="text-red-500 text-sm mt-2">{errors.images}</p>}
-                            </div>
-
 
 
                             {/* Product Display Images */}

@@ -15,7 +15,7 @@ const BrandSection = ({ brandName, brandImage, products }) => {
             className="w-8 h-8 object-contain border rounded-full"
             onError={(e) => {
               e.target.onerror = null;
-             
+
             }}
           />
           <span className="text-md font-semibold whitespace-nowrap uppercase">
@@ -28,16 +28,26 @@ const BrandSection = ({ brandName, brandImage, products }) => {
 
         {/* Product names (plain text) */}
         <div className="flex items-center space-x-4">
-          {products?.map((product) => (
+          {products?.length > 0 ? (
+            products.map((product) => (
+              <Link
+                key={product.id}
+                href={`/products/${product.id}`}
+                className="text-sm whitespace-nowrap uppercase hover:underline"
+              >
+                {product.title}
+              </Link>
+            ))
+          ) : (
             <Link
-              key={product.id}
-              href={`/products/${product.id}`}
-              className="text-sm whitespace-nowrap uppercase hover:underline"
+              href="/products"
+              className="text-sm font-medium whitespace-nowrap uppercase hover:underline"
             >
-              {product.title}
+              SEE MORE
             </Link>
-          ))}
+          )}
         </div>
+
       </div>
 
       <style jsx>{`

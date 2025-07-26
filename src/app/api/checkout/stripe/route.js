@@ -63,9 +63,14 @@ export async function POST(req) {
                     throw new Error("Invalid variantId: " + item.variantId);
                 }
 
-                const basePrice = parseFloat(variant.product.price) + parseFloat(variant.additionalPrice || 0);
+                const basePrice = parseFloat(variant.product.price) 
                 const discountPercent = variant.product.discountPercent || 0;
-                const finalPrice = getDiscountedPrice(basePrice, discountPercent);
+                const finalPrice = getDiscountedPrice(basePrice, discountPercent)+parseFloat(variant.additionalPrice || 0);;
+
+                console.log(`Variant ID: ${item.variantId}`);
+                console.log(`Base Price: ₹${basePrice}`);
+                console.log(`Additional Price: ₹${variant.additionalPrice}`);
+                console.log(`Discount Percent: ${discountPercent}%`);
 
                 return {
                     ...item,

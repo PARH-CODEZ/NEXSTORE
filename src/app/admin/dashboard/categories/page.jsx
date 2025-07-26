@@ -282,7 +282,7 @@ const CategoryPage = () => {
                                         </div>
 
                                         {/* Category Name */}
-                                        <h3 className="text-xl font-semibold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors duration-300 leading-tight uppercase">
+                                        <h3 className="text-md font-semibold text-gray-900 mb-4 group-hover:text-indigo-600 transition-colors duration-300 leading-tight uppercase">
                                             {cat.CategoryName}
                                         </h3>
 

@@ -135,7 +135,7 @@ const AdminLogin = () => {
 
             {/* Form Header */}
             <div className=" mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1 uppercase">Welcome Back</h2>
+              <h2 className="text-md sm:text-lg font-semibold text-gray-900 mb-1 uppercase">Welcome Back</h2>
               <p className="text-sm text-gray-600 uppercase">Sign in to access your admin dashboard</p>
             </div>
 
