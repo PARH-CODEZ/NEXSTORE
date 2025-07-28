@@ -360,8 +360,8 @@ const OrderManagement = () => {
                     <div className=" mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between items-center py-6">
                             <div>
-                                <h1 className="text-xl font-semibold text-gray-900">Order Management</h1>
-                                <p className="text-gray-600 mt-1">Manage and track all your orders</p>
+                                <h1 className="text-lg md:text-xl font-semibold text-gray-900">Order Management</h1>
+                                <p className="text-gray-600 mt-1 text-sm md:text-md">Manage and track all your orders</p>
                             </div>
                             <div className="flex space-x-3">
                                 <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">

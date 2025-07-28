@@ -104,7 +104,7 @@ export default function CheckoutSuccess() {
   }
 
 
-  
+
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('en-IN', {
@@ -197,7 +197,9 @@ export default function CheckoutSuccess() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
-      <CategoryNav />
+      <div className='w-full hidden md:block'>
+        <CategoryNav />
+      </div>
 
       {/* Success Banner */}
       <div className="bg-green-600 text-white px-4 py-4">

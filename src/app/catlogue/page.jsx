@@ -438,7 +438,7 @@ const ProductListingForm = () => {
                                 <div className='flex  sm:ml-11 md:ml-0 flex-row md:justify-end items -center space-x-4 sm:justify-between'>
                                     <button
                                         onClick={() => setShowModal(true)}
-                                        className="mt-4 w-[180px] md:mt-0 inline-flex items-center justify-center px-4 py-2 bg-white text-black font-semibold rounded-md hover:bg-blue-700 transition"
+                                        className="mt-4 w-[180px] md:mt-0 inline-flex items-center justify-center px-4 py-2 bg-white text-md text-black font-semibold rounded-md hover:bg-blue-700 transition"
                                     >
                                         <Plus size={18} className="mr-2" />
                                         ADD BRAND
@@ -446,7 +446,7 @@ const ProductListingForm = () => {
 
                                     <button
                                         onClick={() => setShowCategoryModal(true)}
-                                        className="mt-4 w-[190px] md:mt-0 inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition"
+                                        className="mt-4 w-[190px] md:mt-0 inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-md text-white font-semibold rounded-md hover:bg-blue-700 transition"
                                     >
                                         <Plus size={18} className="mr-2" />
                                         ADD CATEGORY
@@ -460,7 +460,7 @@ const ProductListingForm = () => {
                             {/* Basic Information */}
                             <div className="border-b pb-6">
 
-                                <h2 className="text-lg font-semibold mb-8 flex items-center uppercase">
+                                <h2 className="text-md md:text-lg font-semibold mb-8 flex items-center uppercase">
                                     <Tag className="mr-2 text-blue-500" />
                                     BASIC INFORMATION [ADD BRAND OR CATEGORY IF NOT LISTED]
 
@@ -654,7 +654,7 @@ const ProductListingForm = () => {
 
                             {/* Product Specifications */}
                             <div className="border-b pb-6">
-                                <h2 className="text-lg font-semibold mb-4 flex items-center">
+                                <h2 className="text-lg font-semibold mb-4 flex items-center uppercase">
                                     <Package className="mr-2 text-blue-500 uppercase" />
                                     Product Specifications
                                 </h2>

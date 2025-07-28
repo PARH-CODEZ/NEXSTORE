@@ -124,7 +124,7 @@ const AdminLogin = () => {
               <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl mb-4 shadow-lg">
                 <Package className="w-7 h-7 text-white" />
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-lg sm:text-2xl font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2 tracking-wider">
                 NEXSTORE
               </h1>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-sm border border-blue-200/50">

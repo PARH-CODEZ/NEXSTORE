@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Mail, Phone, User ,ShieldCheck} from 'lucide-react';
+import { Mail, Phone, User, ShieldCheck } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import CategoryNav from '../components/Categories/Categories';
 import Navbar from '../components/Navbar/Navbar';
@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 
 
 export default function EcommerceProfile() {
-  const router = useRouter
+  const router = useRouter()
   const user = useSelector(state => state.user.user);
   const dispatch = useDispatch();
   const [businessName, setBusinessName] = useState('')
@@ -251,7 +251,6 @@ export default function EcommerceProfile() {
       });
 
       if (res.ok) {
-
         router.push('/');
       } else {
         const data = await res.json();
@@ -269,7 +268,9 @@ export default function EcommerceProfile() {
 
 
       <Navbar />
-      <CategoryNav />
+      <div className='w-full hidden md:block'>
+        <CategoryNav />
+      </div>
       {loading ?
         (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-160px)] space-y-2">
@@ -282,9 +283,9 @@ export default function EcommerceProfile() {
               <div className="max-w-5xl mx-auto p-6 min-h-screen overflow-x-hidden">
                 <div className="bg-gray-50 rounded-lg shadow-xl border border-gray-200">
                   <div className="px-6 py-8 border-b border-gray-200">
-                    <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <h1 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
                       <ShieldCheck className="w-6 h-6 text-blue-600" />
-                      LOGIN AND SECURITY 
+                      LOGIN AND SECURITY
                     </h1>
                   </div>
 

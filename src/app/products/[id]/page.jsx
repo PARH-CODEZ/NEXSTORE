@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useActionState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Star, Share, Truck, Shield, Award, RotateCcw, Zap, Trash2 } from 'lucide-react';
 import Navbar from '@/app/components/Navbar/Navbar';
 import CategoryNav from '@/app/components/Categories/Categories';
@@ -326,7 +326,30 @@ const Productpage = () => {
 
 
 
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    const distance = touchStartX.current - touchEndX.current;
+
+    if (Math.abs(distance) > 50) {
+      const currentIndex = thumbnailImages.indexOf(mainImage);
+      if (distance > 0) {
+        // Swipe left → Next image
+        const nextIndex = (currentIndex + 1) % thumbnailImages.length;
+        setMainImage(thumbnailImages[nextIndex]);
+      } else {
+        // Swipe right → Previous image
+        const prevIndex = (currentIndex - 1 + thumbnailImages.length) % thumbnailImages.length;
+        setMainImage(thumbnailImages[prevIndex]);
+      }
+    }
+  };
   const protectionPlanPrice = Math.round(product.price * 0.1); // 10% of product price
 
 
@@ -334,15 +357,18 @@ const Productpage = () => {
   if (notFound) return (
     <>
       <Navbar />
-      <CategoryNav />
+      <div className='w-full hidden md:block'>
+        <CategoryNav />
+      </div>
       <ProductNotFound />
     </>)
   return (
     <>
       <div className='overflow-x-hidden'>
         <Navbar />
-        <CategoryNav />
-
+        <div className='w-full hidden md:block'>
+          <CategoryNav />
+        </div>
 
 
         {loading ? (
@@ -383,11 +409,16 @@ const Productpage = () => {
 
 
                     {/* Main Image */}
-                    <div className="flex-grow sm:h-[430px] md:h-[700px] bg-gray-50 rounded-lg p-4 md:p-8 mb-4 w-full">
+                    <div
+                      className="flex-grow sm:h-[430px] md:h-[700px] bg-gray-50 rounded-lg p-4 md:p-8 mb-4 w-full"
+                      onTouchStart={handleTouchStart}
+                      onTouchEnd={handleTouchEnd}
+                    >
                       <img
                         src={mainImage}
                         alt="Selected Product"
-                        className="w-full h-full object-contain "
+                        className="w-full h-full object-contain"
+                        draggable={false}
                       />
 
                       {/* Dots (Mobile only) */}

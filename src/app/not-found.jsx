@@ -5,7 +5,7 @@ import { ArrowLeft, Home, Search } from "lucide-react";
 export default function NotFound() {
   return (
     <section className="min-h-[calc(100vh)] w-full flex items-center justify-center bg-white p-6">
-      <div className="w-full max-w-md text-center bg-gray-100 p-8 px-10">
+      <div className="w-full max-w-md text-center p-8 px-10">
         
         {/* Clean Icon */}
         <div className="mb-8">
@@ -17,7 +17,7 @@ export default function NotFound() {
         {/* Simple Typography */}
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-gray-900 mb-4">404</h1>
-          <h2 className="text-2xl font-normal text-gray-900 mb-4 uppercase">Page not found</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4 uppercase">Page not found</h2>
           <p className="text-gray-600 leading-relaxed max-w-sm mx-auto">
             We can't find the page you're looking for. It might have been moved, deleted, or you entered the wrong URL.
           </p>

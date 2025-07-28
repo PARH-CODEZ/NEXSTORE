@@ -173,7 +173,9 @@ export default function ShoppingCart() {
     return (
         <div className="overflow-x-hidden bg-gray-100">
             <Navbar />
-            <CategoryNav />
+            <div className='w-full hidden md:block'>
+                <CategoryNav />
+            </div>
             {
                 loading ? (
                     <div className="flex flex-col items-center justify-center h-[calc(100vh-160px)] space-y-2">
@@ -191,7 +193,7 @@ export default function ShoppingCart() {
                                 <div className="lg:col-span-2 order-2 lg:order-1 ">
                                     <div className="bg-white rounded-sm shadow-md p-6 mb-6 ">
                                         <div className="flex items-center justify-between mb-8 border-b border-grey-500 pb-10 ">
-                                            <h1 className="text-xl font-semibold text-gray-700 uppercase">Shopping Cart</h1>
+                                            <h1 className="text-lg md:text-xl font-semibold text-gray-700 uppercase">Shopping Cart</h1>
                                             <button
                                                 className="text-blue-600 hover:text-blue-800 text-sm uppercase"
                                                 onClick={deselectAll} // ✅ This is correct
@@ -316,7 +318,7 @@ export default function ShoppingCart() {
 
                                         {/* Subtotal */}
                                         <div className="pt-4 text-right">
-                                            <span className="text-xl font-semibold">
+                                            <span className="text-lg md:text-xl font-semibold uppercase">
                                                 TOTAL ({cartItems.length} items): {formatPrice(subtotal)}
                                             </span>
                                         </div>
@@ -339,7 +341,7 @@ export default function ShoppingCart() {
                                             Choose <button className="text-blue-600 ">FREE DELIVERY</button> option at checkout.
                                         </p>
 
-                                        <div className="text-xl font-semibold mb-4">
+                                        <div className="text-lg md:text-xl font-semibold mb-4">
                                             SUBTOTAL ({cartItems.length} ITEMS): {formatPrice(subtotal)}
                                         </div>
 

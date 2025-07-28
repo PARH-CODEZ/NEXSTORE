@@ -135,7 +135,9 @@ const page = () => {
         <>
             <div className='overflow-x-hidden'>
                 <Navbar />
-                <CategoryNav />
+                <div className='w-full hidden md:block'>
+                    <CategoryNav />
+                </div>
                 {empty ? (
                     <EmptyOrdersContainer />
                 ) : loading ? (
@@ -152,7 +154,7 @@ const page = () => {
                         <div className=" max-w-7xl mx-auto ">
                             <div className="max-w-7xl mx-auto psm:px-6 lg:px-8 s">
                                 <div className="py-4 px-4">
-                                    <h1 className="text-2xl font-semibold text-gray-900 uppercase">Your Orders</h1>
+                                    <h1 className="text-lg md:text-xl font-semibold text-gray-900 uppercase">Your Orders</h1>
                                     <p className="text-sm text-gray-600 mt-1 uppercase">Track packages, review orders, and discover new products</p>
                                 </div>
                             </div>

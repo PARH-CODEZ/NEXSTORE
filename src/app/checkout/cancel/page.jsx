@@ -6,8 +6,8 @@ export default function OrderFailurePage() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-6 text-center">
       <XCircle className="w-16 h-16 text-red-600 mb-4" />
-      <h1 className="text-2xl font-bold text-gray-900 mb-2 uppercase">Order Failed</h1>
-      <p className="text-gray-700 mb-4 uppercase">
+      <h1 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2 uppercase">Order Failed</h1>
+      <p className="text-gray-700 mb-4 uppercase test-sm font-medium">
         We're sorry, but your order couldn't be confirmed. Please try again or contact support if the issue persists.
       </p>
       <button

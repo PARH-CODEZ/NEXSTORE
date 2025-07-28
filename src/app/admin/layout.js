@@ -54,7 +54,7 @@ export default function AdminDashboardLayout({ children }) {
               <Package className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-lg font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              <span className="text-md font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                 ADMIN
               </span>
               <div className="text-xs text-gray-500 font-medium">CONTROL PANEL</div>

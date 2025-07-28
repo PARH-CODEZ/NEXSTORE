@@ -294,7 +294,7 @@ const Navbar = ({ notFixed = false }) => {
                                     {/* Products */}
                                     {searchResults.products.length > 0 && (
                                         <div className="p-4">
-                                            <h3 className="text-base font-bold text-black uppercase tracking-wide mb-3">
+                                            <h3 className="text-base font-semibold text-black uppercase tracking-wide mb-3">
                                                 Products
                                             </h3>
                                             {searchResults.products.map((prod) => (

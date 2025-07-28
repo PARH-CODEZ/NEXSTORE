@@ -174,10 +174,10 @@ const CategoryPage = () => {
                                 </div>
                             </div>
                             <div>
-                                <h1 className="text-xl font-semibold bg-gradient-to-r bg-clip-text text-black uppercase">
+                                <h1 className="text-lg md:text-xl font-semibold bg-gradient-to-r bg-clip-text text-black uppercase ">
                                     Categories
                                 </h1>
-                                <p className="text-gray-600 font-normal mt-2 uppercase text-xs md:text-md">
+                                <p className="text-gray-600 font-normal mt-2 uppercase text-sm md:text-md">
                                     Organize and manage your product categories with style
                                 </p>
                             </div>
@@ -191,7 +191,7 @@ const CategoryPage = () => {
                             <div className="relative flex items-center gap-3">
                                 <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
                                 <span className="hidden sm:inline text-sm">ADD CATEGORY</span>
-                                <span className="sm:hidden">ADD NEW CATEGORY</span>
+                                <span className="sm:hidden text-sm">ADD NEW CATEGORY</span>
                             </div>
                         </button>
                     </div>
@@ -263,7 +263,7 @@ const CategoryPage = () => {
                                                     <Tag className="w-6 h-6 text-white" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Category</div>
+                                                    <div className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Category</div>
                                                     <div className="text-xs text-gray-400 font-medium">#{cat.CategoryID}</div>
                                                 </div>
                                             </div>

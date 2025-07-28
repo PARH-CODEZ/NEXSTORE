@@ -49,7 +49,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
         {/* PROFILE */}
         <div className="my-6">
           <div className="px-6 mb-3">
-            <h3 className="text-lg font-bold text-gray-900">PROFILE</h3>
+            <h3 className="text-lg font-semibold text-gray-900">PROFILE</h3>
 
           </div>
 
@@ -129,13 +129,15 @@ const MobileSidebar = ({ isOpen, onClose }) => {
               <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
             </button>
 
-            <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">
-              <div className="flex items-center space-x-3">
-                <RotateCcw size={18} className="text-gray-500" />
-                <span className="text-gray-800 font-medium">RETURNS CENTRE</span>
-              </div>
-              <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
-            </button>
+            <Link href="/orders" className="block">
+              <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">
+                <div className="flex items-center space-x-3">
+                  <RotateCcw size={18} className="text-gray-500" />
+                  <span className="text-gray-800 font-medium">RETURNS CENTRE</span>
+                </div>
+                <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+              </button>
+            </Link>
 
           </div>
         </div>
