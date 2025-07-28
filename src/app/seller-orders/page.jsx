@@ -390,7 +390,9 @@ const OrderManagement = () => {
   return (
     <div className='overflow-x-hidden'>
       <Navbar />
-      <CategoryNav />
+      <div className='w-full hidden md:block'>
+        <CategoryNav />
+      </div>
 
       <div className="min-h-screen bg-gray-100">
         {/* Header */}
@@ -398,8 +400,8 @@ const OrderManagement = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">Order Management</h1>
-                <p className="text-gray-600 mt-1">Manage and track all your orders</p>
+                <h1 className="text-lg md:text-xl font-semibold text-gray-900">Order Management</h1>
+                <p className="text-gray-600 mt-1 text-sm">Manage and track all your orders</p>
               </div>
               <div className="flex space-x-3">
                 <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
@@ -722,7 +724,7 @@ function StatCard({ title, value, Icon, bgFrom, bgTo }) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm font-bold text-gray-900">{value}</p>
         </div>
         <div className="p-3 bg-white rounded-full shadow">
           <Icon className="w-6 h-6 text-gray-800" />

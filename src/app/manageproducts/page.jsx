@@ -132,7 +132,7 @@ export default function ProductsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+            <h1 className="text-lg md:text-xl  font-semibold text-gray-900">
               MY PRODUCTS AND LISTINGS
             </h1>
             <p className="text-sm sm:text-base text-gray-600 uppercase">

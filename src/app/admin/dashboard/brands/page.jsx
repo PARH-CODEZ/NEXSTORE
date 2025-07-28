@@ -59,7 +59,7 @@ const BrandPage = () => {
 
             <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
                 {/* Header Section */}
-                <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm sticky top-0 z-20">
+                <div className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm  top-0 z-20">
                     <div className="px-4 sm:px-6 py-6">
                         <div className="flex justify-between items-center flex-wrap gap-4">
                             <div className="flex items-center gap-4">
@@ -67,10 +67,10 @@ const BrandPage = () => {
                                     <BadgePercent className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-xl sm:text-xl font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                                    <h1 className="text-lg md:text-xl sm:text-xl font-semibold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
                                         BRANDS
                                     </h1>
-                                    <p className="text-xs text-gray-500 font-medium mt-1 uppercase md:text-md">
+                                    <p className="text-sm text-gray-500  mt-1 uppercase md:text-md">
                                         Manage your brand collection efficiently
                                     </p>
                                 </div>
@@ -81,8 +81,8 @@ const BrandPage = () => {
                                 className="group flex items-center gap-2 bg-gray-700 text-white font-semibold px-6 py-2 rounded-sm shadow-lg hover:shadow-xl transition-all duration-200"
                             >
                                 <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                <span className="hidden sm:inline">ADD BRAND</span>
-                                <span className="sm:hidden">ADD</span>
+                                <span className="hidden sm:inline">ADD NEW BRAND</span>
+                                <span className="sm:hidden text-sm">ADD BRAND </span>
                             </button>
                         </div>
                     </div>

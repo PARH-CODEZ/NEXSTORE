@@ -35,7 +35,7 @@ const categories = [
   };
 
   return (
-    <nav className="bg-gray-800 text-white h-16 overflow-x-scroll overflow-y-hidden custom-scrollbar">
+    <nav className="bg-gray-800 text-white h-14 md:h-16 overflow-x-scroll overflow-y-hidden custom-scrollbar">
       <style jsx>{`
         /* Firefox */
         .custom-scrollbar {

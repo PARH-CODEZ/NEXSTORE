@@ -39,11 +39,12 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between md:items-center flex-col md:flex-row mb-4 gap-4">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900 uppercase">Analytics Dashboard</h1>
+            <h1 className=" text-lg md:text-xl font-semibold text-gray-900 uppercase mr-1 ">Analytics Dashboard</h1>
             <p className="text-gray-600 mt-1 uppercase">Track your store performance and insights</p>
           </div>
+         
           <div className="flex items-center space-x-4">
             <select
               value={timeRange}
@@ -346,7 +347,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
 
         {/* Performance Insights */}
-        <div className={`bg-white  rounded-xl shadow-sm border border-gray-200 mb-8 ${loading ? 'skeleton' : ''}`}>
+        <div className={`bg-white  rounded-xl p-2 shadow-sm border border-gray-200 mb-8 ${loading ? 'skeleton' : ''}`}>
           <h3 className=" text-lg font-semibold text-gray-900 mb-4 uppercase">Performance Insights</h3>
           <div className="space-y-4">
             <div className="border-l-4 border-green-500 pl-4">
