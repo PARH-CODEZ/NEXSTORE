@@ -187,7 +187,7 @@ const Navbar = ({ notFixed = false }) => {
                     {/* Logo */}
                     <Link
                         href="/"
-                        className="font-semibold text-xl md:text-sm lg:text-md  xl:text-xl cursor-pointer select-none relative z-50"
+                        className="font-semibold text-lg md:text-sm lg:text-md  xl:text-xl cursor-pointer select-none relative z-50 top-[-4px] md:top-0"
                     >
                         NEXSTORE
                     </Link>
@@ -197,8 +197,8 @@ const Navbar = ({ notFixed = false }) => {
                             <div className="flex md:hidden items-center px-1 py-2 gap-2 text-md border-t border-gray-700">
                                 <MapPin size={20} />
                                 <div>
-                                    <span className="text-gray-300  uppercase">Delivering to {defaultPostalCode || '400001'}</span> •{' '}
-                                    <span className="font-semibold text-md underline uppercase"> {defaultCity || 'Update Location'}</span>
+                                    <span className="text-gray-300 text-sm uppercase">Delivering to {defaultPostalCode || '400001'}</span> •{' '}
+                                    <span className=" text-sm underline uppercase"> {defaultCity || 'Update Location'}</span>
                                 </div>
                             </div>
                         </Link>
@@ -354,8 +354,8 @@ const Navbar = ({ notFixed = false }) => {
 
                             <div className="flex items-center text-gray-300 md:hidden space-x-1 "
                                 onClick={() => setSidebarOpen(true)}>
-                                <User size={25} className="font-bold" />
-                                <span className="text-md font-semibold">
+                                <User size={25} className="font-semibold" />
+                                <span className="text-sm font-medium">
                                     {user ? user.name.trim().split(' ')[0] : 'SIGN IN'}
                                 </span>
                             </div>

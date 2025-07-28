@@ -120,10 +120,12 @@ const MobileSidebar = ({ isOpen, onClose }) => {
           </div>
           <div className="space-y-1">
             <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">
-              <div className="flex items-center space-x-3">
-                <RotateCcw size={18} className="text-gray-500" />
-                <span className="text-gray-800 font-medium">BUY AGAIN</span>
-              </div>
+              <Link href="/orders" className="block">
+                <div className="flex items-center space-x-3">
+                  <RotateCcw size={18} className="text-gray-500" />
+                  <span className="text-gray-800 font-medium">YOUR ORDERS</span>
+                </div>
+              </Link>
               <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
             </button>
 
