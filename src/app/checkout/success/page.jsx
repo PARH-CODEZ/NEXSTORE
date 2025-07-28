@@ -16,8 +16,6 @@ export default function CheckoutSuccess() {
   const [order, setOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [quantities, setQuantities] = useState({});
-  const [showModal, setShowModal] = useState(false);
-  const [updated, setUpdated] = useState(false)
   const [loading, setLoading] = useState(false)
   const [isEmpty, setIsEmpty] = useState(false);
 
@@ -47,7 +45,7 @@ export default function CheckoutSuccess() {
     if (orderId) {
       fetchOrderDetails(orderId);
     }
-  }, [orderId, updated]);
+  }, [orderId,]);
 
 
   const handleStatusUpdate = async (orderId, newStatus) => {
@@ -105,9 +103,8 @@ export default function CheckoutSuccess() {
 
   }
 
-  const handleUpdate = () => {
-    setUpdated(prev => !prev)
-  }
+
+  
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('en-IN', {
@@ -462,16 +459,6 @@ export default function CheckoutSuccess() {
                 {order.paymentMethod === 'card' ? 'Paid via Card' : 'Cash on Delivery'}
               </p>
             </div>
-
-            {showModal && (
-              <CancelItemsModal
-                isOpen={showModal}
-                onClose={() => setShowModal(false)}
-                orderId={orderId}
-                items={items}
-                onUpdate={handleUpdate}
-              />
-            )}
 
 
 

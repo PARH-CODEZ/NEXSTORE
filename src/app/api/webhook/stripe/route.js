@@ -9,8 +9,9 @@ export const config = {
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2024-04-10',
+    apiVersion: '2025-06-30.basil',
 });
+
 
 export async function POST(req) {
     const rawBody = await req.arrayBuffer();
@@ -58,22 +59,19 @@ export async function POST(req) {
                         status: 'CONFIRMED',
                     },
                 }),
-
-                await prisma.orderStatusHistory.create({
+                prisma.orderStatusHistory.create({
                     data: {
                         orderId,
-                        status: 'CONFIRMED',       // enum OrderStatus
-                        note: 'Auto-confirmed after successful payment', // optional
-                        updatedBy: null,           // optional (null if system-triggered)
-                        timestamp: new Date(),     // optional since default(now()) is set
+                        status: 'CONFIRMED',
+                        note: 'Auto-confirmed after successful payment',
+                        updatedBy: null,
+                        timestamp: new Date(),
                     },
                 }),
-                ,
-
                 prisma.shipment.create({
                     data: {
                         orderId,
-                        courierName: 'To be assigned', // You can update later
+                        courierName: 'To be assigned',
                         status: 'PENDING',
                     },
                 }),
