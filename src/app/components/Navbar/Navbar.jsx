@@ -181,9 +181,9 @@ const Navbar = ({ notFixed = false }) => {
 
     /* ── render ─────────────────────────────────── */
     return (
-        <div className={`bg-[#0D0D0D] text-white z-50  p-[10px] pt-[25px] md:py-4 ${notFixed ? '' : 'sticky top-0'}`}>
+        <div className={`bg-[#0D0D0D] text-white z-50  p-[10px] pt-[15px] md:pt-[15px] md:py-4 ${notFixed ? '' : 'sticky top-0'}`}>
             <div className="w-full px-2">
-                <div className=" items-center h-[140px] md:flex md:h-[50px]">
+                <div className=" items-center h-[130px] md:flex md:h-[50px]">
                     {/* Logo */}
                     <Link
                         href="/"
