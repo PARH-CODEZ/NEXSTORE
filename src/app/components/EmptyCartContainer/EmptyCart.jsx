@@ -8,8 +8,10 @@ const EmptyCartContainer = () => {
     const user = useSelector((state) => state.user.user);
     return (
         <>
-        <Navbar/>
-        <CategoryNav/>
+            <Navbar />
+            <div className='w-full hidden md:block'>
+                <CategoryNav />
+            </div>
             <div className="bg-gray-100 h-[calc(100vh-160px)] p-5 flex justify-center items-center">
                 <div className="bg-white rounded-lg shadow-sm max-w-7xl mx-auto  p-5 md:p-8 text-center top-[-80px]">
 
@@ -38,7 +40,7 @@ const EmptyCartContainer = () => {
 
 
                     {/* Cart Empty Message */}
-                    <h2 className="text-2xl font-normal text-gray-800 mb-4 uppercase">
+                    <h2 className="text-lg font-semibold md:text-2xl md:font-normal text-gray-800 mb-4 uppercase">
                         Your Nexstore Cart is empty
                     </h2>
 

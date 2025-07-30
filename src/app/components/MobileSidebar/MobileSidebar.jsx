@@ -40,7 +40,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
       >
         {/* Header */}
         <div className="p-6 border-b border-gray-200 bg-gray-300 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">HELLO, {firstName || "USER"}</h2>
+          <h2 className="text-lg font-semibold text-gray-900">HELLO, {firstName || "USER"}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-md transition-colors">
             <X size={20} />
           </button>
@@ -49,10 +49,8 @@ const MobileSidebar = ({ isOpen, onClose }) => {
         {/* PROFILE */}
         <div className="my-6">
           <div className="px-6 mb-3">
-            <h3 className="text-lg font-semibold text-gray-900">PROFILE</h3>
-
+            <h3 className="text-md font-semibold text-gray-900">PROFILE</h3>
           </div>
-
         </div>
 
         {/* SWITCH ACCOUNTS */}
@@ -115,14 +113,14 @@ const MobileSidebar = ({ isOpen, onClose }) => {
         {/* YOUR ORDERS */}
         <div className="mb-6">
           <div className="px-6 mb-3">
-            <h3 className="text-lg font-semibold text-gray-900">YOUR ORDERS</h3>
+            <h3 className="text-md font-semibold text-gray-900">YOUR ORDERS</h3>
 
           </div>
           <div className="space-y-1">
             <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">
               <Link href="/orders" className="block">
                 <div className="flex items-center space-x-3">
-                  <RotateCcw size={18} className="text-gray-500" />
+                  <Truck size={18} className="text-gray-500" />
                   <span className="text-gray-800 font-medium">YOUR ORDERS</span>
                 </div>
               </Link>
@@ -130,7 +128,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
             </button>
 
             <Link href="/orders" className="block">
-              <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-100 last:border-b-0">
+              <button className="w-full px-6 py-4 text-left hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between group border-b border-gray-200 last:border-b-0">
                 <div className="flex items-center space-x-3">
                   <RotateCcw size={18} className="text-gray-500" />
                   <span className="text-gray-800 font-medium">RETURNS CENTRE</span>
@@ -145,8 +143,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
         {/* YOUR ACCOUNT */}
         <div className="mb-6">
           <div className="px-6 mb-3">
-
-
+            <h3 className="text-md font-semibold text-gray-900">WISHLIST</h3>
           </div>
           <div className="space-y-1">
             <Link href={"/cart"}>

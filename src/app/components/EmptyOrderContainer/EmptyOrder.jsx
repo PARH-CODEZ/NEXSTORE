@@ -6,7 +6,7 @@ const EmptyOrdersContainer = () => {
     const user = useSelector((state) => state.user.user);
 
     return (
-        <div className="bg-gray-100 h-[calc(100vh-160px)] p-5 flex justify-center items-center">
+        <div className="bg-gray-200 h-[calc(100vh-160px)] p-5 flex justify-center items-center">
             <div className="bg-white rounded-lg shadow-sm max-w-7xl mx-auto p-5 md:p-8 text-center">
 
                 {/* Illustration */}
@@ -35,7 +35,7 @@ const EmptyOrdersContainer = () => {
 
 
                 {/* Title */}
-                <h2 className="text-2xl font-normal text-gray-800 mb-4 uppercase">
+                <h2 className="text-lg font-semibold md:text-2xl md:font-normal text-gray-800 mb-4 uppercase">
                     You have no orders yet
                 </h2>
 
