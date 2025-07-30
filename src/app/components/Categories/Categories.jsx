@@ -67,7 +67,7 @@ const categories = [
             onClick={() => handleClick(category.Slug)}
             className="flex items-center px-5 py-2 hover:bg-gray-700 cursor-pointer whitespace-nowrap h-full rounded-md transition-colors"
           >
-            <span className="text-sm font-semibold uppercase tracking-wide">
+            <span className="text-xs font-normal md:text-sm md:font-semibold uppercase tracking-wide ">
               {category.CategoryName}
             </span>
           </div>

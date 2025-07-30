@@ -141,7 +141,7 @@ export default function CategoryPage() {
         <div className="min-h-screen bg-white overflow-x-hidden w-[99vw]">
           {/* Header */}
           <div className="bg-white px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-            <div className="text-sm md:text-md font-semibold text-gray-700 truncate flex flex-wrap items-center gap-2">
+            <div className="text-xs md:text-md font-semibold text-gray-700 truncate flex flex-wrap items-center gap-2">
               <span>SHOWING {totalResults} ITEMS</span>
               <span className="hidden md:inline text-yellow-600">FOR {slug.toUpperCase()}</span>
             </div>
@@ -463,8 +463,8 @@ export default function CategoryPage() {
 
             {/* Main Content */}
             <div className="flex-1 bg-white w-full p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-1 uppercase">Results</h2>
-              <p className="text-sm text-gray-600 uppercase mb-4">
+              <h2 className="text-md md:text-lg font-semibold text-gray-900 mb-1 uppercase">Results</h2>
+              <p className="text-xs md:text-sm text-gray-600 uppercase mb-4">
                 Check each product page for other buying options.
               </p>
 
@@ -474,7 +474,7 @@ export default function CategoryPage() {
                 </div>
               ) : products?.length === 0 ? (
                 <div className="flex justify-center items-center h-40">
-                  <p className="text-blue-500 text-xl font-semibold uppercase">No products found.</p>
+                  <p className="text-blue-500 text-md md:text-xl font-semibold uppercase">No products found.</p>
                 </div>
               ) : (
                 <ProductGrid products={products} />

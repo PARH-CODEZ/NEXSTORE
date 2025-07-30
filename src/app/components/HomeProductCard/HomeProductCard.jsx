@@ -242,7 +242,7 @@ const ProductCards = () => {
             key={card.id}
             className="bg-gray-200  relative  p-5 shadow-2xl hover:shadow-lg hover:-translate-y-1 transition-all duration-200 sm:h-[450px] md:h-[440px] z-[8]"
           >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 leading-tight uppercase">
+            <h3 className="text-md md:text-lg font-semibold text-gray-900 mb-4 leading-tight uppercase">
               {card.title}
             </h3>
 

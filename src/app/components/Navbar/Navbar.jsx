@@ -198,7 +198,7 @@ const Navbar = ({ notFixed = false }) => {
                                 <MapPin size={20} />
                                 <div>
                                     <span className="text-gray-300 text-sm uppercase">Delivering to {defaultPostalCode || '400001'}</span> •{' '}
-                                    <span className=" text-sm underline uppercase"> {defaultCity || 'Update Location'}</span>
+                                    <span className=" text-xs underline uppercase"> {defaultCity || 'Update Location'}</span>
                                 </div>
                             </div>
                         </Link>
