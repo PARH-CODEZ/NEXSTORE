@@ -1,0 +1,322 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  UserID             Int             @id @default(autoincrement())
+  FullName           String
+  Email              String          @unique
+  PasswordHash       String
+  PhoneNumber        String?
+  Role               String
+  IsActive           Boolean         @default(true)
+  CreatedAt          DateTime        @default(now())
+  ordersAsCustomer   Order[]         @relation("CustomerOrders")
+  cart               Cart[]          @relation("UserCart")
+  reviews            ProductReview[]
+  orderItemsAsSeller OrderItem[]     @relation("SellerOrderItems") // this is correct
+}
+
+model UserAddress {
+  AddressID    Int      @id @default(autoincrement())
+  UserID       Int
+  AddressLine1 String
+  AddressLine2 String?
+  City         String
+  State        String?
+  PostalCode   String
+  Country      String
+  IsDefault    Boolean  @default(false)
+  AddressType  String?
+  CreatedAt    DateTime @default(now())
+
+  @@index([UserID])
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User       @relation("UserCart", fields: [userId], references: [UserID])
+  items CartItem[]
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int
+  variantId Int
+  quantity  Int      @default(1)
+  addedAt   DateTime @default(now())
+
+  cart    Cart           @relation(fields: [cartId], references: [id])
+  variant ProductVariant @relation("VariantCart", fields: [variantId], references: [id])
+
+  @@unique([cartId, variantId]) // Prevent duplicate variants in cart
+}
+
+model SellerProfile {
+  SellerID      Int      @id
+  BusinessName  String?
+  GSTNumber     String?
+  TotalProducts Int      @default(0)
+  TotalOrders   Int      @default(0)
+  Rating        Float?
+  CreatedAt     DateTime @default(now())
+}
+
+model Categories {
+  CategoryID      Int       @id @default(autoincrement())
+  CategoryName    String
+  Description     String?
+  Slug            String?
+  DisplayImageURL String?
+  CreatedAt       DateTime  @default(now())
+  UpdatedAt       DateTime  @updatedAt
+  products        Product[] @relation("CategoryProducts")
+}
+
+model Brand {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  imageUrl  String    @db.VarChar(255)
+  createdAt DateTime  @default(now())
+  products  Product[] @relation("BrandProducts")
+}
+
+model Product {
+  id              Int                    @id @default(autoincrement())
+  categoryId      Int
+  brandId         Int?
+  title           String
+  name            String
+  slug            String
+  description     String?
+  price           Decimal                @db.Decimal(18, 2)
+  discountPercent Decimal                @default(0) @db.Decimal(5, 2)
+  isActive        Boolean                @default(true)
+  isApproved      Boolean                @default(false)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  sellerId        Int
+  stockAvailable  Boolean?               @default(true)
+  brand           Brand?                 @relation("BrandProducts", fields: [brandId], references: [id])
+  category        Categories             @relation("CategoryProducts", fields: [categoryId], references: [CategoryID])
+  displayImages   ProductDisplayImage[]
+  images          ProductImage[]
+  reviews         ProductReview[]
+  specifications  ProductSpecification[]
+  variants        ProductVariant[]
+}
+
+model ProductDisplayImage {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  imageUrl  String  @db.VarChar(255)
+  isPrimary Boolean @default(false)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+}
+
+model ProductImage {
+  id        Int             @id @default(autoincrement())
+  productId Int?
+  variantId Int?
+  imageUrl  String          @db.VarChar(255)
+  isPrimary Boolean         @default(false)
+  product   Product?        @relation(fields: [productId], references: [id])
+  variant   ProductVariant? @relation("VariantImages", fields: [variantId], references: [id])
+
+  @@index([productId])
+  @@index([variantId])
+}
+
+model ProductVariant {
+  id                Int                          @id @default(autoincrement())
+  productId         Int
+  sku               String                       @unique
+  variantName       String                       @db.VarChar(150)
+  additionalPrice   Decimal                      @default(0) @db.Decimal(18, 2)
+  quantityAvailable Int                          @default(0)
+  isActive          Boolean                      @default(true)
+  createdAt         DateTime                     @default(now())
+  OrderItem         OrderItem[]
+  images            ProductImage[]               @relation("VariantImages")
+  product           Product                      @relation(fields: [productId], references: [id])
+  attributeMapping  ProductVariantAttributeMap[]
+  cartItems         CartItem[]                   @relation("VariantCart") // 🔥 Added
+
+  @@index([productId])
+}
+
+model VariantAttribute {
+  id     Int                     @id @default(autoincrement())
+  name   String                  @unique @db.VarChar(50)
+  values VariantAttributeValue[]
+}
+
+model VariantAttributeValue {
+  id          Int                          @id @default(autoincrement())
+  attributeId Int
+  value       String                       @db.VarChar(50)
+  mappings    ProductVariantAttributeMap[]
+  attribute   VariantAttribute             @relation(fields: [attributeId], references: [id])
+}
+
+model ProductVariantAttributeMap {
+  id        Int                   @id @default(autoincrement())
+  variantId Int
+  valueId   Int
+  value     VariantAttributeValue @relation(fields: [valueId], references: [id])
+  variant   ProductVariant        @relation(fields: [variantId], references: [id])
+
+  @@index([variantId])
+  @@index([valueId])
+}
+
+model ProductSpecification {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  label     String
+  value     String
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model ProductReview {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  userId    Int
+  rating    Int      @default(5)
+  review    String?
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [UserID])
+}
+
+model OrderStatusHistory {
+  id        Int         @id @default(autoincrement())
+  orderId   Int
+  status    OrderStatus
+  note      String?
+  updatedBy Int?
+  timestamp DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id])
+}
+
+model Order {
+  id                Int                  @id @default(autoincrement())
+  userId            Int
+  shippingAddressId Int
+  billingAddressId  Int
+  status            OrderStatus          @default(PENDING)
+  paymentStatus     PaymentStatus        @default(PENDING)
+  paymentMethod     String?
+  shippingFee       Decimal              @default(0.00) @db.Decimal(10, 2)
+  subtotal          Decimal              @default(0.00) @db.Decimal(18, 2)
+  totalAmount       Decimal              @default(0.00) @db.Decimal(18, 2)
+  placedAt          DateTime             @default(now())
+  deliveredAt       DateTime?
+  cancelledAt       DateTime?
+  trackingNumber    String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  billingAddress    OrderAddress         @relation("BillingAddressRelation", fields: [billingAddressId], references: [id])
+  shippingAddress   OrderAddress         @relation("ShippingAddressRelation", fields: [shippingAddressId], references: [id])
+  customer          User                 @relation("CustomerOrders", fields: [userId], references: [UserID])
+  items             OrderItem[]
+  history           OrderStatusHistory[]
+  payments          Payment[]
+  shipments         Shipment[]
+}
+
+model OrderItem {
+  id         Int     @id @default(autoincrement())
+  orderId    Int
+  variantId  Int
+  sellerId   Int
+  quantity   Int
+  price      Decimal @db.Decimal(18, 2)
+  totalPrice Decimal @db.Decimal(18, 2)
+
+  order   Order          @relation(fields: [orderId], references: [id])
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+  seller  User           @relation("SellerOrderItems", fields: [sellerId], references: [UserID])
+}
+
+model Shipment {
+  id             Int            @id @default(autoincrement())
+  orderId        Int
+  courierName    String
+  trackingNumber String?
+  shippedAt      DateTime?
+  expectedAt     DateTime?
+  deliveredAt    DateTime?
+  status         ShipmentStatus @default(PENDING)
+  order          Order          @relation(fields: [orderId], references: [id])
+}
+
+model Payment {
+  id      Int   @id @default(autoincrement())
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+
+  amount          Decimal       @db.Decimal(18, 2)
+  status          PaymentStatus @default(PENDING) // Enum: PENDING, SUCCESS, FAILED
+  method          String? // e.g., "card", "wallet", "upi", etc.
+  transactionId   String? // Stripe charge ID or PaymentIntent ID
+  providerOrderId String? // Stripe Checkout Session ID or PaymentIntent ID
+
+  paidAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderAddress {
+  id             Int     @id @default(autoincrement())
+  fullName       String
+  phoneNumber    String
+  addressLine1   String
+  addressLine2   String?
+  city           String
+  state          String
+  postalCode     String
+  country        String
+  billingOrders  Order[] @relation("BillingAddressRelation")
+  shippingOrders Order[] @relation("ShippingAddressRelation")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PACKED
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  RETURN_REQUESTED
+  RETURNED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum ShipmentStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  LOST
+  RETURNED
+}
+  
